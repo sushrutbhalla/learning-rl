@@ -137,7 +137,7 @@ class RL:
                 iterId = 0
                 state = s0
                 if self.debug:
-                    print ("\n===============================================================")
+                    print ("\n-------------------------------------------------------------")
                     print ("N: {}".format(N))
                     print ("Q: {}".format(Q))
                     print ("policy: {}".format(np.argmax(Q, axis=0)))
