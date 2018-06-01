@@ -446,6 +446,10 @@ def plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend, n=10, nTria
     plt.show()
 
 
+
+
+
+
 def generate_data_and_plot(nEpisodes=200, nTrials=100, nSteps=100):
     cumulative_reward = np.zeros([nTrials, nEpisodes])
     avg_cumulative_reward = np.zeros([4, nEpisodes])
