@@ -19,6 +19,7 @@ class RL:
 
         self.mdp = mdp
         self.sampleReward = sampleReward
+        self.cumulative_reward = []
         self.debug = False
 
     def sampleRewardAndNextState(self,state,action):
@@ -77,74 +78,80 @@ class RL:
         N = np.zeros([self.mdp.nActions, self.mdp.nStates])
         prob_act = np.zeros([self.mdp.nActions])
         lr = 1
-        #changeInQ = True
         iterId = 0
         policy = np.zeros(self.mdp.nStates,int)
-        #while changeInQ:
-        for _ in range(nEpisodes):
-            action_chosen = False
-            #select an action based on epsilon (exploration vs exploitation)
-            if epsilon != 0. and random.random() <= epsilon:
-                #explore with probability epsilon
-                action = random.randint(0, self.mdp.nActions-1)
-                action_chosen = True
+        self.cumulative_reward = []
+        for episode_idx in range(nEpisodes):
+            iterId = 0
+            cumulative_reward_episode = 0.
+            for episode_step in range(nSteps):
+                action_chosen = False
+                #select an action based on epsilon (exploration vs exploitation)
+                if epsilon != 0. and random.random() <= epsilon:
+                    #explore with probability epsilon
+                    action = random.randint(0, self.mdp.nActions-1)
+                    action_chosen = True
+                    if self.debug:
+                        print ("[exploration] action: {}".format(action))
+                        print ("self.mdp.nActions: {}".format(self.mdp.nActions))
+                if (not action_chosen) and temperature != 0:
+                    #select an action based on boltzmann exploration
+                    denominator = 0
+                    for act_idx in range(self.mdp.nActions):
+                        denominator += math.exp(Q[act_idx, state]/temperature)
+                    for act_idx in range(self.mdp.nActions):
+                        prob_act[act_idx] = math.exp(Q[act_idx, state]/temperature)/denominator
+                    assert round(decimal.Decimal(np.sum(prob_act)),2) == 1., "total probabilities don't equal 1: " + repr(np.sum(prob_act))
+                    action = np.random.choice(self.mdp.nActions, p=prob_act)
+                    action_chosen = True
+                if not action_chosen:
+                    #exploit the best action from the policy
+                    action = np.argmax(Q[:, state], axis=0)
+                    assert np.argmax(Q[:, state], axis=0) == np.argmax(Q, axis=0)[state], \
+                            "Wrong action found during exploitation: " + repr(action)
+                    action_chosen = True
+                    if self.debug:
+                        print ("[exploitation] action: {}".format(action))
+                        print ("Q: {}".format(Q))
+                        print ("Q.shape {}".format(Q.shape))
+                        print ("Q[0, :] {}".format(Q[0, :]))
+                        print ("Q[:, 0] {}".format(Q[:, 0]))
+                        print ("np.argmax(Q[:, state], axis=0): {}".format(np.argmax(Q[:, state], axis=0)))
+                        print ("np.argmax(Q, axis=0)[state]: {}".format(np.argmax(Q, axis=0)[state]))
+                #observe state_p and reward
+                reward, state_p = self.sampleRewardAndNextState(state, action)
+                #update counter for (state, action) in N
+                N[action, state] += 1
+                #learning rate
+                lr = 1./N[action, state]
+                #update Q-value
+                Q_new = copy.deepcopy(Q)
+                #action_p is the best action from state_p under this Q function
+                action_p = np.argmax(Q[:, state_p], axis=0)
+                Q_new[action, state]= Q[action, state] + lr*(reward+(self.mdp.discount*Q[action_p, state_p])-Q[action, state])
                 if self.debug:
-                    print ("[exploration] action: {}".format(action))
-                    print ("self.mdp.nActions: {}".format(self.mdp.nActions))
-            if (not action_chosen) and temperature != 0:
-                #select an action based on boltzmann exploration
-                denominator = 0
-                for act_idx in range(self.mdp.nActions):
-                    denominator += math.exp(Q[act_idx, state]/temperature)
-                for act_idx in range(self.mdp.nActions):
-                    prob_act[act_idx] = math.exp(Q[act_idx, state]/temperature)/denominator
-                assert round(decimal.Decimal(np.sum(prob_act)),2) == 1., "total probabilities don't equal 1: " + repr(np.sum(prob_act))
-                action = np.random.choice(self.mdp.nActions, p=prob_act)
-                action_chosen = True
-            if not action_chosen:
-                #exploit the best action from the policy
-                action = np.argmax(Q[:, state], axis=0)
-                assert np.argmax(Q[:, state], axis=0) == np.argmax(Q, axis=0)[state], \
-                        "Wrong action found during exploitation: " + repr(action)
-                action_chosen = True
-                if self.debug:
-                    print ("[exploitation] action: {}".format(action))
-                    print ("Q: {}".format(Q))
-                    print ("Q.shape {}".format(Q.shape))
-                    print ("Q[0, :] {}".format(Q[0, :]))
-                    print ("Q[:, 0] {}".format(Q[:, 0]))
-                    print ("np.argmax(Q[:, state], axis=0): {}".format(np.argmax(Q[:, state], axis=0)))
-                    print ("np.argmax(Q, axis=0)[state]: {}".format(np.argmax(Q, axis=0)[state]))
-            #observe state_p and reward
-            reward, state_p = self.sampleRewardAndNextState(state, action)
-            #update counter for (state, action) in N
-            N[action, state] += 1
-            #learning rate
-            lr = 1./N[action, state]
-            #update Q-value
-            Q_new = copy.deepcopy(Q)
-            #action_p is the best action from state_p under this Q function
-            action_p = np.argmax(Q[:, state_p], axis=0)
-            Q_new[action, state]= Q[action, state] + lr*(reward+(self.mdp.discount*Q[action_p, state_p])-Q[action, state])
-            if np.array_equal(Q, Q_new):
-                #changeInQ = False
-                #break from the loop as the value has converged
-                break
-            state = state_p
-            Q = Q_new
-            iterId += 1
-            if iterId == nSteps:
-                iterId = 0
-                state = s0
-                if self.debug:
-                    print ("\n-------------------------------------------------------------")
-                    print ("N: {}".format(N))
-                    print ("Q: {}".format(Q))
-                    print ("policy: {}".format(np.argmax(Q, axis=0)))
-                    print ("lr: {}".format(lr))
-                    print ("update: {}".format(Q_new - Q))
+                    print ("reward: {}".format(reward))
+                    print ("cumulative_reward: {}".format(reward*(self.mdp.discount**episode_step)))
+                cumulative_reward_episode += reward*(self.mdp.discount**episode_step)
+                state = state_p
+                Q = Q_new
+            self.cumulative_reward.append(cumulative_reward_episode)
+            #episode has finished, reset starting state for next episode
+            state = s0
+            if self.debug:
+                print ("\n-------------------- episode_idx: {} ------------------------".format(episode_idx))
+                print ("N: {}".format(N))
+                print ("Q: {}".format(Q))
+                print ("policy: {}".format(np.argmax(Q, axis=0)))
+                print ("lr: {}".format(lr))
+                print ("update: {}".format(Q_new - Q))
+        #all episodes have finished
+        assert len(self.cumulative_reward) == nEpisodes, "Length of reward list != nEpisodes " + repr(len(self.cumulative_reward)) + repr(nEpisodes)
         #TODO does the policy improvement step need to go in the for loop?
         #but from page 80 of Sutton book, the use of max q_k to evaluate q_(k+1) is same as using argmax policy_k
         policy = np.argmax(Q, axis=0)
 
         return [Q,policy]
+
+    def get_cumulative_reward(self):
+        return np.array(self.cumulative_reward)

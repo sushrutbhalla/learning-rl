@@ -16,15 +16,15 @@ import sys
   | 12 | 13 | 14 | 15 |
   ---------------------
 
-  Goal state: 15 
+  Goal state: 15
   Bad state: 9
   End state: 16
 
-  The end state is an absorbing state that the agent transitions 
+  The end state is an absorbing state that the agent transitions
   to after visiting the goal state.
 
-  There are 17 states in total (including the end state) 
-  and 4 actions (up, down, right, left).'''
+  There are 17 states in total (including the end state)
+  and 4 actions (up, down, left, right).'''
 
 # Transition function: |A| x |S| x |S'| array
 T = np.zeros([4,17,17])
@@ -295,7 +295,7 @@ R[:,16] = 0;    # end state
 
 # Discount factor: scalar in [0,1)
 discount = 0.95
-        
+
 # MDP object
 mdp = MDP.MDP(T,R,discount)
 
@@ -322,4 +322,12 @@ print ("policy:")
 print (policy)
 print ("V:")
 print (V)
-
+for nEvalIterations in range(1, 11):
+    [policy,V,nIterations,epsilon] = mdp.modifiedPolicyIteration(np.zeros(mdp.nStates,dtype=int),np.zeros(mdp.nStates),nEvalIterations=nEvalIterations,tolerance=0.01)
+    print ("nEvalIterations: {}, nIterations: {}".format(nEvalIterations, nIterations))
+    #print ("---------------------- nEvalIterations: {} ---------------------".format(nEvalIterations))
+    #print ("[DEBUG] modifiedPolicyIteration nIterations: {}, epsilon: {}".format(nIterations,epsilon))
+    #print ("policy:")
+    #print (policy)
+    #print ("V:")
+    #print (V)

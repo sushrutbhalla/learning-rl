@@ -51,7 +51,7 @@ class MDP:
         epsilon = 0.
         changeInV = True
         V_act = np.empty([self.nActions, self.nStates])
-        while changeInV or (nIterations != np.inf and iterId < nIterations):
+        while changeInV:
             for act_idx in range(self.nActions):
                 if self.debug:
                     print ("R[act_idx].shape: {}".format(self.R[act_idx].shape))
@@ -66,10 +66,14 @@ class MDP:
                 print ("V_star {}".format(V_star))
             iterId += 1
             epsilon = LA.norm(np.subtract(V_star,np.amax(V_act, axis=0)), np.inf)
-            if (epsilon == 0. and nIterations == np.inf) or (epsilon <= tolerance and nIterations != np.inf):
+            #print ("[DEBUG] epsilon: {}".format(epsilon))
+            if (nIterations == np.inf and tolerance == 0. and epsilon == 0. ) or \
+               (tolerance != 0. and epsilon <= tolerance) or \
+               (nIterations != np.inf and iterId == nIterations):
                 #the algorithm will only converge when the value function for states stops changing OR
                 #the algorithm will converge when the change in value function is less than tolerance
-                # (based on the comment on piazza that stop the algo when the epsilon <= tolerance)
+                # (based on the comment on piazza that stop the algo when the epsilon <= tolerance) OR
+                #the algorithm will converge when the nIterations have expired
                 changeInV = False
             V_star = np.amax(V_act, axis=0)
 
@@ -236,9 +240,9 @@ class MDP:
             V_new = R_pi + (self.discount*np.matmul(T_pi, V_pi))
             iterId += 1
             epsilon = LA.norm(np.subtract(V_new,V_pi), np.inf)
-            if np.array_equal(V_new, V_pi) or \
-               (nIterations == iterId) or \
-               (nIterations != np.inf and epsilon <= tolerance):
+            if (nIterations == np.inf and tolerance == 0. and epsilon == 0. ) or \
+               (tolerance != 0. and epsilon <= tolerance) or \
+               (nIterations != np.inf and iterId == nIterations):
                 changeInV = False
             V_pi = V_new
         V = V_pi

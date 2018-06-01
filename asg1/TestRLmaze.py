@@ -18,15 +18,15 @@ import sys
   | 12 | 13 | 14 | 15 |
   ---------------------
 
-  Goal state: 15 
+  Goal state: 15
   Bad state: 9
   End state: 16
 
-  The end state is an absorbing state that the agent transitions 
+  The end state is an absorbing state that the agent transitions
   to after visiting the goal state.
 
-  There are 17 states in total (including the end state) 
-  and 4 actions (up, down, right, left).'''
+  There are 17 states in total (including the end state)
+  and 4 actions (up, down, left, right).'''
 
 # Transition function: |A| x |S| x |S'| array
 T = np.zeros([4,17,17])
@@ -297,7 +297,7 @@ R[:,16] = 0;    # end state
 
 # Discount factor: scalar in [0,1)
 discount = 0.95
-        
+
 # MDP object
 mdp = MDP.MDP(T,R,discount)
 
@@ -329,13 +329,13 @@ def check_for_goodness(policy):
 def turn_towards_pit(policy):
   for state,action in enumerate(policy):
     if state == 5 and action == 1:
-      return True 
+      return True
     elif state == 8 and action == 3:
-      return True 
+      return True
     elif state == 13 and action == 0:
       return True
     elif state == 10 and action == 2:
-      return True 
+      return True
   return False
 
 def policy_reach_terminal(policy, s0=0, nSteps=100):
@@ -371,7 +371,7 @@ def print_policy_word(policy, epsilon):
   goodness, bad_states = check_for_goodness(policy)
   terminate, total_reward = policy_reach_terminal(policy)
   print ("\n------------------------------ epsilon: {} -------------------------------------".format(epsilon))
-  print ("TERMINATE: {}, GOODNESS: {}, SOFT_GOODNESS: {}\nbad states: {} Total Reward: {}\n{}".format(\
+  print ("TERMINATE: {}, GOODNESS: {}, SOFT_GOODNESS: {}\nbad states: {}, Total Reward: {}\n{}".format(\
     terminate, goodness, not turn_towards_pit(policy), bad_states,\
     total_reward, policy_word))
   return
@@ -400,15 +400,77 @@ print_policy_word(policy, epsilon=0.5)
 
 
 #DEBUG TODO remove
-for idx in range(100):
-  for esps in ([0.05, 0.1, 0.3, 0.5]):
-    [Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=10000,nSteps=100,epsilon=esps,temperature=0)
-    if not policy_reach_terminal(policy):
-      print ("Policy didn't terminate: ({},{}) {}".format(idx, esps, policy))
-      break
-  else:
-    continue
-  break
+#for idx in range(100):
+#  for esps in ([0.05, 0.1, 0.3, 0.5]):
+#    [Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=10000,nSteps=100,epsilon=esps,temperature=0)
+#    if not policy_reach_terminal(policy):
+#      print ("Policy didn't terminate: ({},{}) {}".format(idx, esps, policy))
+#      break
+#  else:
+#    continue
+#  break
 
-[Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=10000,nSteps=100,epsilon=0.3,temperature=0)
-print_policy_word(policy, epsilon=0.3)
+#[Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=10000,nSteps=100,epsilon=0.3,temperature=0)
+#print_policy_word(policy, epsilon=0.3)
+
+#generate the graph
+#TODO is the cummulative reward during training for 100 steps or when following policy after 100 steps for 100 steps?
+#let's do a graph for both
+import matplotlib.pyplot as plt
+def plot_avg_cumulative_reward(avg_cumulative_reward, legend, nTrials=100, nEpisodes=200):
+    for idx in range(avg_cumulative_reward.shape[0]):
+        plt.plot(avg_cumulative_reward[idx,:])
+    plt.title('Q-Learning: Average Cumulative Reward ({} trials,{} episodes)'.format(nTrials,nEpisodes))
+    plt.ylabel('Cumulative Reward')
+    plt.xlabel('Episode')
+    plt.legend(legend, loc='lower right')
+    plt.savefig('avg_cumulative_reward_q_learning.png')
+    plt.show()
+
+def moving_average(a, n=3) :
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    final = ret[n - 1:] / n
+    return final
+    #pad = final[-1]*np.ones(len(a)-len(final))
+    #return np.concatenate((final,pad),axis=0)
+
+def plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend, n=10, nTrials=100, nEpisodes=200):
+    for idx in range(avg_cumulative_reward.shape[0]):
+        plt.plot(moving_average(avg_cumulative_reward[idx,:],n=n))
+    plt.title('Q-Learning: Smooth Average Cumulative Reward ({} trials,{} episodes)'.format(nTrials,nEpisodes))
+    plt.ylabel('Cumulative Reward')
+    plt.xlabel('Episode')
+    plt.legend(legend, loc='lower right')
+    plt.savefig('smooth_n_{}_avg_cumulative_reward_{}_q_learning.png'.format(n,nEpisodes))
+    plt.show()
+
+
+def generate_data_and_plot(nEpisodes=200, nTrials=100, nSteps=100):
+    cumulative_reward = np.zeros([nTrials, nEpisodes])
+    avg_cumulative_reward = np.zeros([4, nEpisodes])
+    plot_legend = []
+    for epsilon_idx,epsilon_val in enumerate(list([0.05, 0.1, 0.3, 0.5])):
+        #print ("epsilon_val: {}".format(epsilon_val))
+        for trial in range(nTrials):
+            #run qLearning for 200 episodes and 100 steps
+            [Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=nEpisodes,nSteps=nSteps,epsilon=epsilon_val)
+            cumulative_reward[trial,:] = rlProblem.get_cumulative_reward()
+        avg_cumulative_reward[epsilon_idx,:] = np.mean(cumulative_reward, axis=0)
+        plot_legend.append('epsilon: {}'.format(epsilon_val))
+    return avg_cumulative_reward, plot_legend
+
+# #generate data for 200 episodes over 100 trials
+# avg_cumulative_reward, plot_legend = generate_data_and_plot()
+# #plot original graph and smoothed graphs using moving average
+# plot_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend)
+# plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=5)
+# plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=10)
+# plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=20)
+# plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=50)
+
+#generate data for 250 episodes over 100 trials for smoothed out graph
+avg_cumulative_reward, plot_legend = generate_data_and_plot(nEpisodes=250)
+#plot the smoothed out graph
+plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=50, nEpisodes=250)
+
