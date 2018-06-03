@@ -60,11 +60,6 @@ class RL:
         policy -- final policy
         '''
 
-        # # temporary values to ensure that the code compiles until this
-        # # function is coded
-        # Q = np.zeros([self.mdp.nActions,self.mdp.nStates])
-        # policy = np.zeros(self.mdp.nStates,int)
-
         assert initialQ.ndim == 2, "Invalid initialV: it has dimensionality " + repr(initialQ.ndim)
         assert initialQ.shape[0] == self.mdp.nActions and initialQ.shape[1] == self.mdp.nStates, \
                 "Invalid initialV: it has shape " + repr(initialQ.shape)
@@ -87,14 +82,14 @@ class RL:
             for episode_step in range(nSteps):
                 action_chosen = False
                 #select an action based on epsilon (exploration vs exploitation)
-                if epsilon != 0. and random.random() <= epsilon:
+                if epsilon > 0. and random.random() <= epsilon:
                     #explore with probability epsilon
                     action = random.randint(0, self.mdp.nActions-1)
                     action_chosen = True
                     if self.debug:
                         print ("[exploration] action: {}".format(action))
                         print ("self.mdp.nActions: {}".format(self.mdp.nActions))
-                if (not action_chosen) and temperature != 0:
+                if (not action_chosen) and temperature > 0:
                     #select an action based on boltzmann exploration
                     denominator = 0
                     for act_idx in range(self.mdp.nActions):
@@ -150,6 +145,12 @@ class RL:
         #TODO does the policy improvement step need to go in the for loop?
         #but from page 80 of Sutton book, the use of max q_k to evaluate q_(k+1) is same as using argmax policy_k
         policy = np.argmax(Q, axis=0)
+
+        #sanity check on output
+        assert Q.ndim == 2, "Invalid Final Q: Wrong dimensionality " + repr(Q.ndim)
+        assert Q.shape[0] == self.mdp.nActions and Q.shape[1] == self.mdp.nStates, "Invalid Final Q: Wrong shape " + repr(Q.shape)
+        assert policy.ndim == 1, "Invalid Final policy: Wrong dimensionality " + repr(policy.ndim)
+        assert policy.shape[0] == self.mdp.nStates, "Invalid Final policy: Wrong shape " + repr(policy.shape)
 
         return [Q,policy]
 

@@ -43,32 +43,36 @@ class MDP:
         iterId -- # of iterations performed: scalar
         epsilon -- ||V^n-V^n+1||_inf: scalar'''
 
+        #check some input variables
         assert initialV.ndim == 1, "Invalid initialV: it has dimensionality " + repr(initialV.ndim)
         assert initialV.shape[0] == self.nStates, "Invalid initialV shape: it has shape " + repr(initialV.shape)
+        #initialize variables for value iteration
         V_star = initialV  #using initialV as it was given in slide 15 (2b) that all initial estimates
-                           #for value iteration will terminate (just with different number of iterations
+                           #for value iteration will terminate (just with different number of iterations)
         iterId = 0
         epsilon = 0.
         changeInV = True
-        V_act = np.empty([self.nActions, self.nStates])
+        V_act = np.zeros([self.nActions, self.nStates])
+        #loop until V stops changing or epsilon <= tolerance
         while changeInV:
             for act_idx in range(self.nActions):
                 if self.debug:
-                    print ("R[act_idx].shape: {}".format(self.R[act_idx].shape))
-                    print ("T[act_idx].shape: {}".format(self.T[act_idx].shape))
-                    print ("V_star.shape: {}".format(V_star.shape))
-                    print ("right term shape: {}".format(np.matmul(self.T[act_idx], V_star).shape))
-                    print ("full term shape: {}".format((self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_star))).shape))
+                    print ("[DEBUG:VI] R[act_idx].shape: {}".format(self.R[act_idx].shape))
+                    print ("[DEBUG:VI] T[act_idx].shape: {}".format(self.T[act_idx].shape))
+                    print ("[DEBUG:VI] V_star.shape: {}".format(V_star.shape))
+                    print ("[DEBUG:VI] right term shape: {}".format(np.matmul(self.T[act_idx], V_star).shape))
+                    print ("[DEBUG:VI] full term shape: {}".format((self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_star))).shape))
                 #for each action, compute the V and then select V_star based on max of element wise
                 V_act[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_star))
-            if self.debug:
-                print ("V_act[0] max {}".format(np.amax(V_act, axis=0)))
-                print ("V_star {}".format(V_star))
             iterId += 1
             epsilon = LA.norm(np.subtract(V_star,np.amax(V_act, axis=0)), np.inf)
-            #print ("[DEBUG] epsilon: {}".format(epsilon))
-            if (nIterations == np.inf and tolerance == 0. and epsilon == 0. ) or \
-               (tolerance != 0. and epsilon <= tolerance) or \
+            if self.debug:
+                print ("[DEBUG:VI] V_act[0] max {}".format(np.amax(V_act, axis=0)))
+                print ("[DEBUG:VI] V_star {}".format(V_star))
+                print ("[DEBUG:VI] epsilon: {}".format(epsilon))
+            #convergence condition
+            if (tolerance == 0. and epsilon == 0. ) or \
+               (tolerance > 0. and epsilon <= tolerance) or \
                (nIterations != np.inf and iterId == nIterations):
                 #the algorithm will only converge when the value function for states stops changing OR
                 #the algorithm will converge when the change in value function is less than tolerance
@@ -79,9 +83,9 @@ class MDP:
 
         V = V_star
         if self.debug:
-            print ("V: {}".format(V))
-            print ("iterId: {}".format(iterId))
-            print ("epsilon: {}".format(epsilon))
+            print ("[DEBUG:VI] V: {}".format(V))
+            print ("[DEBUG:VI] iterId: {}".format(iterId))
+            print ("[DEBUG:VI] epsilon: {}".format(epsilon))
 
         return [V,iterId,epsilon]
 
@@ -101,17 +105,16 @@ class MDP:
         #the policy can be extracted by running the value iteration step one more time
         #because the value iteration has converged, we should have a stationary policy, so
         #running the value iteration step one more time won't change the policy
-        V_act = np.empty([self.nActions, self.nStates])
+        V_act = np.zeros([self.nActions, self.nStates])
         for act_idx in range(self.nActions):
             if self.debug:
-                print ("right term shape: {}".format(np.matmul(self.T[act_idx], V).shape))
-                print ("full term shape: {}".format((self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V))).shape))
+                print ("[DEBUG:ExP] right term shape: {}".format(np.matmul(self.T[act_idx], V).shape))
+                print ("[DEBUG:ExP] full term shape: {}".format((self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V))).shape))
             #for each action, compute the V and then select V based on max of element wise
             V_act[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V))
         if self.debug:
-            #seems like 1 is 'S' (save) and 0 is 'A' (advertise)
-            print ("V_act amax {}".format(np.amax(V_act, axis=0)))
-            print ("V_act argmax {}".format(np.argmax(V_act, axis=0)))
+            print ("[DEBUG:ExP] V_act amax {}".format(np.amax(V_act, axis=0)))
+            print ("[DEBUG:ExP] V_act argmax {}".format(np.argmax(V_act, axis=0)))
         policy = np.argmax(V_act, axis=0)
 
         return policy
@@ -127,26 +130,27 @@ class MDP:
         V -- Value function: array of |S| entries'''
 
         #get the reward signal and transition matrix for the current policy
-        R_pi = np.empty([self.nStates])
-        #TODO delete: T_pi = np.zeros([self.nActions,self.nStates,self.nStates], dtype=np.float)
+        R_pi = np.zeros([self.nStates])
         T_pi = np.zeros([self.nStates,self.nStates], dtype=np.float)
         V_pi = np.zeros([self.nStates])
         changeInV = True
         for state_idx in range(self.nStates):
             action = policy[state_idx]
             R_pi[state_idx] = self.R[action, state_idx]
-            T_pi[state_idx] = self.T[action, state_idx]
+            T_pi[state_idx] = self.T[action, state_idx, :]
         if self.debug:
-            print ("policy: {}".format(policy))
-            print ("R_pi: {}".format(R_pi))
-            print ("T_pi: {}".format(T_pi))
-            print ("R_pi shape: {}".format(R_pi.shape))
-            print ("T_pi shape: {}".format(T_pi.shape))
-            print ("T shape: {}".format(self.T.shape))
-            print ("V_pi shape: {}".format(V_pi.shape))
-            print ("right term: {}".format(np.matmul(T_pi, V_pi).shape))
+            print ("[DEBUG:EvP] policy: {}".format(policy))
+            print ("[DEBUG:EvP] R_pi: {}".format(R_pi))
+            print ("[DEBUG:EvP] T_pi: {}".format(T_pi))
+            print ("[DEBUG:EvP] self.T: {}".format(self.T))
+            print ("[DEBUG:EvP] R_pi shape: {}".format(R_pi.shape))
+            print ("[DEBUG:EvP] T_pi shape: {}".format(T_pi.shape))
+            print ("[DEBUG:EvP] T shape: {}".format(self.T.shape))
+            print ("[DEBUG:EvP] V_pi shape: {}".format(V_pi.shape))
+            print ("[DEBUG:EvP] right term: {}".format(np.matmul(T_pi, V_pi).shape))
         while changeInV:
             V_new = R_pi + (self.discount*np.matmul(T_pi, V_pi))
+            #full policy evaluation requires iterations until the value function stops changing or epsilon==0
             if np.array_equal(V_new, V_pi):
                 changeInV = False
             V_pi = V_new
@@ -177,24 +181,25 @@ class MDP:
         policy = initialPolicy
         V = np.zeros(self.nStates)
         iterId = 0
-        while changeInP or (nIterations != np.inf and iterId < nIterations):
+        while changeInP:
+            #evaluate policy
             V_eval = self.evaluatePolicy(policy)
             #generate new policy using V_eval
-            V_act = np.empty([self.nActions, self.nStates])
+            V_act = np.zeros([self.nActions, self.nStates])
             for act_idx in range(self.nActions):
                 V_act[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_eval))
             policy_new = np.argmax(V_act, axis=0)
             if self.debug:
-                print ("V_eval: {}".format(V_eval))
-                print ("policy_new: {}".format(policy_new))
-            if np.array_equal(policy_new, policy) or np.array_equal(V_eval, V):
+                print ("[DEBUG PI] V_eval: {}".format(V_eval))
+                print ("[DEBUG PI] policy_new: {}".format(policy_new))
+            if np.array_equal(policy_new, policy) or np.array_equal(V_eval, V) or \
+               (nIterations != np.inf and iterId == nIterations):
                 #from lecture 3a video 14:00, we should also have stopping condition where the value function is same
                 changeInP = False
             policy = policy_new
             V = V_eval
             iterId += 1
 
-        #TODO the comments have epsilon
         return [policy,V,iterId]
 
     def evaluatePolicyPartially(self,policy,initialV,nIterations=np.inf,tolerance=0.01):
@@ -212,10 +217,8 @@ class MDP:
         iterId -- # of iterations performed: scalar
         epsilon -- ||V^n-V^n+1||_inf: scalar'''
 
-        #TODO check if this is the right way of doing it, as the equation at the top doesn't have a equal sign, it has a assignment
         #get the reward signal and transition matrix for the current policy
-        R_pi = np.empty([self.nStates])
-        #TODO delete: T_pi = np.zeros([self.nActions,self.nStates,self.nStates], dtype=np.float)
+        R_pi = np.zeros([self.nStates])
         T_pi = np.zeros([self.nStates,self.nStates], dtype=np.float)
         V_pi = initialV
         changeInV = True
@@ -226,22 +229,23 @@ class MDP:
             R_pi[state_idx] = self.R[action, state_idx]
             T_pi[state_idx] = self.T[action, state_idx]
         if self.debug:
-            print ("policy: {}".format(policy))
-            print ("R_pi: {}".format(R_pi))
-            print ("T_pi: {}".format(T_pi))
-            print ("R_pi shape: {}".format(R_pi.shape))
-            print ("T_pi shape: {}".format(T_pi.shape))
-            print ("T shape: {}".format(self.T.shape))
-            print ("V_pi shape: {}".format(V_pi.shape))
-            print ("right term: {}".format(np.matmul(T_pi, V_pi).shape))
+            print ("[DEBUG EvPp] policy: {}".format(policy))
+            print ("[DEBUG EvPp] R_pi: {}".format(R_pi))
+            print ("[DEBUG EvPp] T_pi: {}".format(T_pi))
+            print ("[DEBUG EvPp] R_pi shape: {}".format(R_pi.shape))
+            print ("[DEBUG EvPp] T_pi shape: {}".format(T_pi.shape))
+            print ("[DEBUG EvPp] T shape: {}".format(self.T.shape))
+            print ("[DEBUG EvPp] V_pi shape: {}".format(V_pi.shape))
+            print ("[DEBUG EvPp] right term: {}".format(np.matmul(T_pi, V_pi).shape))
         if nIterations == 0:
             changeInV = False
+        #repeat richardson iteration for nIterations or until epsilon is converged
         while changeInV:
             V_new = R_pi + (self.discount*np.matmul(T_pi, V_pi))
             iterId += 1
             epsilon = LA.norm(np.subtract(V_new,V_pi), np.inf)
-            if (nIterations == np.inf and tolerance == 0. and epsilon == 0. ) or \
-               (tolerance != 0. and epsilon <= tolerance) or \
+            if (tolerance == 0. and epsilon == 0. ) or \
+               (tolerance > 0. and epsilon <= tolerance) or \
                (nIterations != np.inf and iterId == nIterations):
                 changeInV = False
             V_pi = V_new
@@ -249,7 +253,7 @@ class MDP:
 
         return [V,iterId,epsilon]
 
-    def modifiedPolicyIteration(self,initialPolicy,initialV,nEvalIterations=5,nIterations=np.inf,tolerance=0.01):
+    def modifiedPolicyIteration(self,initialPolicy,initialV,nEvalIterations=5,nIterations=np.inf,tolerance=0.01, report_full_iter=False):
         '''Modified policy iteration procedure: alternate between
         partial policy evaluation (repeat a few times V^pi <-- R^pi + gamma T^pi V^pi)
         and policy improvement (pi <-- argmax_a R^a + gamma T^a V^pi)
@@ -260,19 +264,13 @@ class MDP:
         nEvalIterations -- limit on # of iterations to be performed in each partial policy evaluation: scalar (default: 5)
         nIterations -- limit on # of iterations to be performed in modified policy iteration: scalar (default: inf)
         tolerance -- threshold on ||V^n-V^n+1||_inf: scalar (default: 0.01)
+        report_full_iter (False) -- report the total number of iterations for policy iteration + partial policy evaluation
 
         Outputs:
         policy -- Policy: array of |S| entries
         V -- Value function: array of |S| entries
         iterId -- # of iterations peformed by modified policy iteration: scalar
         epsilon -- ||V^n-V^n+1||_inf: scalar'''
-
-        # # temporary values to ensure that the code compiles until this
-        # # function is coded
-        # policy = np.zeros(self.nStates)
-        # V = np.zeros(self.nStates)
-        # iterId = 0
-        # epsilon = 0
 
         #sanity checking
         assert initialPolicy.ndim == 1, "Invalid initialPolicy: it has dimensionality " + repr(initialPolicy.ndim)
@@ -286,27 +284,25 @@ class MDP:
         V_next = initialV
         iterId = 0
         epsilon = 0.
-        while changeInP or (nIterations != np.inf and iterId < nIterations):
-            V_eval, _, _ = self.evaluatePolicyPartially(policy, V_next, nIterations=nEvalIterations, tolerance=tolerance)
-            #TODO do I worry about the epsilon from the previous call? is it the same epsilon as the one computed below?
-            #generate new policy using V_eval
-            V_act = np.empty([self.nActions, self.nStates])
+        while changeInP:
+            V_eval, eval_iter, eval_epsilon = self.evaluatePolicyPartially(policy, V_next, nIterations=nEvalIterations, tolerance=tolerance)
+            if report_full_iter:
+                iterId += eval_iter
+            V_act = np.zeros([self.nActions, self.nStates])
             for act_idx in range(self.nActions):
                 V_act[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_eval))
             policy_new = np.argmax(V_act, axis=0)
+            V_next = np.amax(V_act, axis=0)
             if self.debug:
-                print ("V_eval: {}".format(V_eval))
-                print ("policy_new: {}".format(policy_new))
-            #compute V^(n+1) TODO the following lines seem useless
-            V_act2 = np.empty([self.nActions, self.nStates])
-            for act_idx in range(self.nActions):
-                #for each action, compute the V and then select V_next based on max of element wise
-                V_act2[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_eval))
-            V_next = np.amax(V_act2, axis=0)
+                print ("[DEBUG:MPI] V_eval: {}".format(V_eval))
+                print ("[DEBUG:MPI] policy_new: {}".format(policy_new))
             iterId += 1
             epsilon = LA.norm(np.subtract(V_eval, V_next), np.inf)
-            if np.array_equal(policy_new, policy) or np.array_equal(V_eval, V_next) or (nIterations != np.inf and epsilon <= tolerance) or (nIterations == iterId):
-                #from lecture 3a video 14:00, we should also have stopping condition where the value function is same
+            if (tolerance == 0. and epsilon == 0.) or \
+               (tolerance > 0. and epsilon <= tolerance) or \
+               (nIterations != np.inf and nIterations == iterId):
+               #convergence conditions are similar to value iteration where the change in value iteration
+               #should be less than epsilon or run at least for nIterations
                 changeInP = False
             policy = policy_new
             V = V_eval

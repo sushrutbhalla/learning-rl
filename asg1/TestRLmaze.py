@@ -474,7 +474,7 @@ def generate_data_and_plot(nEpisodes=200, nTrials=100, nSteps=100):
 # plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=50)
 
 #generate data for 250 episodes over 100 trials for smoothed out graph
-avg_cumulative_reward, plot_legend = generate_data_and_plot(nEpisodes=250)
+#avg_cumulative_reward, plot_legend = generate_data_and_plot(nEpisodes=250)
 #plot the smoothed out graph
-plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=50, nEpisodes=250)
+#plot_smooth_avg_cumulative_reward(avg_cumulative_reward, legend=plot_legend, n=50, nEpisodes=250)
 
