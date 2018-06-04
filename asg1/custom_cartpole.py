@@ -22,8 +22,15 @@ def model(inpt, num_actions, scope, reuse=False):
         return out
 
 
-#if __name__ == '__main__':
 def get_cartpole_rewards(target_net_upd_steps=1000, mini_batch_sample_size=32, nEpisodes=1000, logging=False):
+    '''DQN implementation of the cartpole environment.
+    Inputs:
+    target_net_upd_steps: number of steps before a target network update is performed
+    mini_batch_sample_size: number of samples to use for the evaluation network update
+    Outputs:
+    num_of_episodes_to_solve: number of episodes required before DQN converged
+    cumulative reward for each episode
+    '''
     num_of_episodes_to_solve = 0
     tf.reset_default_graph()
     with U.make_session(8):
