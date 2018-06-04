@@ -3,6 +3,9 @@ The files are organized as follows. The name of the files is quite descriptive.
 The python notebooks (ipynb,html and pdf format) contain the results and discussions of the assignment.
 Other python scripts are provided as part of the submission.
 
+NOTE: The PDFs have been generated but the code gets cut for long lines of code.
+Please refer to html files as they are static pages which can be easily viewed and long lines of code are wrapped.
+
 ## Part 1:
 Supporting files:
 * MDP.py
