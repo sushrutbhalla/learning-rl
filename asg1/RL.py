@@ -76,6 +76,9 @@ class RL:
         iterId = 0
         policy = np.zeros(self.mdp.nStates,int)
         self.cumulative_reward = []
+        #Q-learning convergence requires us to visit every state inifinite number of times
+        #thus it is better to run it for specified episodes*steps unless some other convergence condition is provided
+        # like in DQN the convergence requires the moving average of rewards to be >= 200
         for episode_idx in range(nEpisodes):
             iterId = 0
             cumulative_reward_episode = 0.
@@ -119,7 +122,7 @@ class RL:
                 N[action, state] += 1
                 #learning rate
                 lr = 1./N[action, state]
-                #update Q-value
+                #update Q-value for current state,action pair
                 Q_new = copy.deepcopy(Q)
                 #action_p is the best action from state_p under this Q function
                 action_p = np.argmax(Q[:, state_p], axis=0)
@@ -130,9 +133,9 @@ class RL:
                 cumulative_reward_episode += reward*(self.mdp.discount**episode_step)
                 state = state_p
                 Q = Q_new
-            self.cumulative_reward.append(cumulative_reward_episode)
             #episode has finished, reset starting state for next episode
             state = s0
+            self.cumulative_reward.append(cumulative_reward_episode)
             if self.debug:
                 print ("\n-------------------- episode_idx: {} ------------------------".format(episode_idx))
                 print ("N: {}".format(N))
@@ -140,10 +143,10 @@ class RL:
                 print ("policy: {}".format(np.argmax(Q, axis=0)))
                 print ("lr: {}".format(lr))
                 print ("update: {}".format(Q_new - Q))
+                print ("cumulative_reward: {}".format(cumulative_reward_episode))
         #all episodes have finished
         assert len(self.cumulative_reward) == nEpisodes, "Length of reward list != nEpisodes " + repr(len(self.cumulative_reward)) + repr(nEpisodes)
-        #TODO does the policy improvement step need to go in the for loop?
-        #but from page 80 of Sutton book, the use of max q_k to evaluate q_(k+1) is same as using argmax policy_k
+        #update the policy using the final Q-function
         policy = np.argmax(Q, axis=0)
 
         #sanity check on output
@@ -155,4 +158,8 @@ class RL:
         return [Q,policy]
 
     def get_cumulative_reward(self):
+        '''Keeping the signature of the q_learning function unchanged, I have added this
+        seperate function to keep track of the cumulative_reward per episode generated from
+        the latest run of q-learning
+        '''
         return np.array(self.cumulative_reward)

@@ -65,15 +65,9 @@ def get_cartpole_rewards(target_net_upd_steps=1000, mini_batch_sample_size=32, n
             if is_solved or len(episode_rewards) > nEpisodes:
                 # Show off the result
                 #env.render()
-                if is_solved:
+                if is_solved and num_of_episodes_to_solve == 0:
                     num_of_episodes_to_solve = len(episode_rewards)
                 return np.array(episode_rewards[:-1]), int(num_of_episodes_to_solve)
-                # Return the cumulative rewards for each episode
-                #if len(episode_rewards) < nEpisodes:
-                #    pad = episode_rewards[-1]*np.ones(nEpisodes-len(episode_rewards))
-                #    return np.concatenate((np.array(episode_rewards),pad),axis=0), int(num_of_episodes_to_solve)
-                #else:
-                #    return np.array(episode_rewards[0:nEpisodes]), num_of_episodes_to_solve
             else:
                 # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
                 if t > 1000:
@@ -90,3 +84,5 @@ def get_cartpole_rewards(target_net_upd_steps=1000, mini_batch_sample_size=32, n
                 logger.record_tabular("% time spent exploring", int(100 * exploration.value(t)))
                 logger.dump_tabular()
 
+if __name__ == '__main__':
+    print ("Results: {}".format(get_cartpole_rewards()))
