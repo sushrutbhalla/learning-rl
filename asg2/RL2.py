@@ -146,5 +146,29 @@ class RL2:
         # temporary values to ensure that the code compiles until this
         # function is coded
         policyParams = np.zeros((self.mdp.nActions,self.mdp.nStates))
-            
+
+        #setup variables
+        policyParams = initialPolicyParams
+        #what is the iniital value of the Gn? can it converge from any value?
+        Gn = np.zeros([self.mdp.nActions, self.mdp.nStates])
+        #format for episode_path: (state, action, reward)
+        episode_path = np.zeros([nSteps, 3])
+        state = s0
+        while True:
+            for episode_idx in range(nEpisodes):
+                for step_idx in range(nSteps):
+                    #generate trajectory
+                    action = self.sampleSoftmaxPolicy(policyParams, state)
+                    reward, state_p = self.sampleRewardAndNextState(state, action)
+                    episode_path[step_idx,:] = [state,action,reward]
+                    state = state_p
+                for step_idx in range(nSteps):
+                    state = episode_path[step_idx, 0]
+                    action = episode_path[step_idx, 1]
+                    Gn[action, state] = 0.
+                    for idx in range(nSteps-step_idx):
+                        reward = episode_path[step_idx+idx, 2]
+                        Gn[action, state] += (self.mdp.discount**idx)*reward
+                    #update the policy parameters
+
         return policyParams    
