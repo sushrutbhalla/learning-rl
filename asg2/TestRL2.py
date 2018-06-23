@@ -26,18 +26,18 @@ banditProblem = RL2.RL2(mdp,sampleBernoulli)
 
 # Test epsilon greedy strategy
 empiricalMeans = banditProblem.epsilonGreedyBandit(nIterations=1000)
-print "\nepsilonGreedyBandit results"
-print empiricalMeans
+print ("\nepsilonGreedyBandit results")
+print (empiricalMeans)
 
 # Test Thompson sampling strategy
 empiricalMeans = banditProblem.thompsonSamplingBandit(prior=np.ones([mdp.nActions,2]),nIterations=1000)
-print "\nthompsonSamplingBandit results"
-print empiricalMeans
+print ("\nthompsonSamplingBandit results")
+print (empiricalMeans)
 
 # Test UCB strategy
 empiricalMeans = banditProblem.UCBbandit(nIterations=1000)
-print "\nUCBbandit results"
-print empiricalMeans
+print ("\nUCBbandit results")
+print (empiricalMeans)
 
 ''' Construct simple MDP as described in Lecture 2a Slides 13-14'''
 T = np.array([[[0.5,0.5,0,0],[0,1,0,0],[0.5,0.5,0,0],[0,1,0,0]],[[1,0,0,0],[0.5,0,0,0.5],[0.5,0,0.5,0],[0,0,0.5,0.5]]])
@@ -48,12 +48,12 @@ rlProblem = RL2.RL2(mdp,np.random.normal)
 
 # Test REINFORCE 
 [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=1000,nSteps=100)
-print "\nREINFORCE results"
-print Q
-print policy
+print ("\nREINFORCE results")
+print (Q)
+print (policy)
 
 # Test model-based RL
 [V,policy] = rlProblem.modelBasedRL(s0=0,defaultT=np.ones([mdp.nActions,mdp.nStates,mdp.nStates])/mdp.nStates,initialR=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=100,nSteps=100,epsilon=0.3)
-print "\nmodel-based RL results"
-print V
-print policy
+print ("\nmodel-based RL results")
+print (V)
+print (policy)

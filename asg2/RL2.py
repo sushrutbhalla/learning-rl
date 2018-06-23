@@ -1,5 +1,7 @@
 import numpy as np
 import MDP
+import math
+import tensorflow as tf
 
 class RL2:
     def __init__(self,mdp,sampleReward):
@@ -49,7 +51,13 @@ class RL2:
 
         # temporary value to ensure that the code compiles until this
         # function is coded
-        action = 0
+        # action = 0
+
+        act_dist = np.exp(policyParams[:, state])/np.sum(np.exp(policyParams[:,state]))
+        assert len(act_dist) == self.mdp.nActions, "Length of stochastic actions for state don't match"
+        #keeping the assert sensitive to the way python handles decimal values
+        assert np.sum(act_dist) >= 0.9999 and np.sum(act_dist) <= 1.0001, "Softmax sum doesn't equal 1: " + repr(np.sum(act_dist))
+        action = np.random.choice(self.mdp.nActions, p=act_dist)
         
         return action
 
@@ -151,6 +159,7 @@ class RL2:
         policyParams = initialPolicyParams
         #what is the iniital value of the Gn? can it converge from any value?
         Gn = np.zeros([self.mdp.nActions, self.mdp.nStates])
+        sch_policy = np.zeros([self.mdp.nActions, self.mdp.nStates])
         #format for episode_path: (state, action, reward)
         episode_path = np.zeros([nSteps, 3])
         state = s0
@@ -163,12 +172,16 @@ class RL2:
                     episode_path[step_idx,:] = [state,action,reward]
                     state = state_p
                 for step_idx in range(nSteps):
-                    state = episode_path[step_idx, 0]
-                    action = episode_path[step_idx, 1]
+                    state = int(episode_path[step_idx, 0])
+                    action = int(episode_path[step_idx, 1])
                     Gn[action, state] = 0.
                     for idx in range(nSteps-step_idx):
                         reward = episode_path[step_idx+idx, 2]
                         Gn[action, state] += (self.mdp.discount**idx)*reward
                     #update the policy parameters
+                    sch_policy[action, state] = math.exp(policyParams[action, state])/np.sum(np.exp(policyParams[:,state]))
+                    log_sch_policy = math.log(sch_policy[action, state])
+                    out = jacobian(log_sch_policy, policyParams)
+                    print (out)
 
         return policyParams    
