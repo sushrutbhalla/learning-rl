@@ -25,20 +25,21 @@ mdp = MDP.MDP(T,R,discount)
 banditProblem = RL2.RL2(mdp,sampleBernoulli)
 
 # Test epsilon greedy strategy
-empiricalMeans = banditProblem.epsilonGreedyBandit(nIterations=1000)
+empiricalMeans = banditProblem.epsilonGreedyBandit(nIterations=200)
 print ("\nepsilonGreedyBandit results")
 print (empiricalMeans)
 
 # Test Thompson sampling strategy
-empiricalMeans = banditProblem.thompsonSamplingBandit(prior=np.ones([mdp.nActions,2]),nIterations=1000)
+empiricalMeans = banditProblem.thompsonSamplingBandit(prior=np.ones([mdp.nActions,2]),nIterations=200)
 print ("\nthompsonSamplingBandit results")
 print (empiricalMeans)
 
 # Test UCB strategy
-empiricalMeans = banditProblem.UCBbandit(nIterations=1000)
+empiricalMeans = banditProblem.UCBbandit(nIterations=200)
 print ("\nUCBbandit results")
 print (empiricalMeans)
 
+#TODO before submission compare the files with the files on server to make sure that the function parameters are correct
 ''' Construct simple MDP as described in Lecture 2a Slides 13-14'''
 T = np.array([[[0.5,0.5,0,0],[0,1,0,0],[0.5,0.5,0,0],[0,1,0,0]],[[1,0,0,0],[0.5,0,0,0.5],[0.5,0,0.5,0],[0,0,0.5,0.5]]])
 R = np.array([[0,0,10,10],[0,0,10,10]])

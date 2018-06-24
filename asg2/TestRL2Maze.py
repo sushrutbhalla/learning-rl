@@ -1,7 +1,7 @@
 import numpy as np
 import MDP
 import RL2
-from Utils import print_policy_word
+from Utils import print_policy_word, check_stochastic_policy_terminate
 
 
 ''' Construct a simple maze MDP
@@ -305,19 +305,23 @@ mdp = MDP.MDP(T,R,discount)
 rlProblem = RL2.RL2(mdp,np.random.normal)
 
 # Test REINFORCE
-Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100)
-print ("\nREINFORCE results")
-print (policy)
-print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
-argmax_policy = np.argmax(policy, axis=0)
-print ("argmax policy: \n{}".format(argmax_policy))
-print_policy_word(argmax_policy)
+# TODO uncomment following when finishd with model-based RL
+# Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100)
+# print ("\nREINFORCE results")
+# print (policy)
+# print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
+# argmax_policy = np.argmax(policy, axis=0)
+# print ("argmax policy: \n{}".format(argmax_policy))
+# print_policy_word(argmax_policy, rlProblem, s0=0, nSteps=100)
+# check_stochastic_policy_terminate(policy, rlProblem, s0=0, nSteps=100, nTrials=100)
 
 # Test model-based RL
 [V,policy] = rlProblem.modelBasedRL(s0=0,defaultT=np.ones([mdp.nActions,mdp.nStates,mdp.nStates])/mdp.nStates,initialR=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=200,nSteps=100,epsilon=0.3)
 print ("\nmodel-based RL results")
 print (V)
 print (policy)
+print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
+print_policy_word(policy, rlProblem, s0=0, nSteps=100)
 
 # Test Q-learning
 #[Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=200,nSteps=100,epsilon=0.05)

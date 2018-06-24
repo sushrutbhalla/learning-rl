@@ -29,7 +29,7 @@ class MDP:
         self.discount = discount
         self.debug = False
 
-    def valueIteration(self,initialV,nIterations=np.inf,tolerance=0.01):
+    def valueIteration(self,initialV,nIterations=np.inf,tolerance=0.01,use_default=True,R_mdp=None,T_mdp=None):
         '''Value iteration procedure
         V <-- max_a R^a + gamma T^a V
 
@@ -42,6 +42,10 @@ class MDP:
         V -- Value function: array of |S| entries
         iterId -- # of iterations performed: scalar
         epsilon -- ||V^n-V^n+1||_inf: scalar'''
+
+        if use_default:
+            R_mdp = self.R
+            T_mdp = self.T
 
         #check some input variables
         assert initialV.ndim == 1, "Invalid initialV: it has dimensionality " + repr(initialV.ndim)
@@ -57,13 +61,13 @@ class MDP:
         while changeInV:
             for act_idx in range(self.nActions):
                 if self.debug:
-                    print ("[DEBUG:VI] R[act_idx].shape: {}".format(self.R[act_idx].shape))
-                    print ("[DEBUG:VI] T[act_idx].shape: {}".format(self.T[act_idx].shape))
+                    print ("[DEBUG:VI] R[act_idx].shape: {}".format(R_mdp[act_idx].shape))
+                    print ("[DEBUG:VI] T[act_idx].shape: {}".format(T_mdp[act_idx].shape))
                     print ("[DEBUG:VI] V_star.shape: {}".format(V_star.shape))
-                    print ("[DEBUG:VI] right term shape: {}".format(np.matmul(self.T[act_idx], V_star).shape))
-                    print ("[DEBUG:VI] full term shape: {}".format((self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_star))).shape))
+                    print ("[DEBUG:VI] right term shape: {}".format(np.matmul(T_mdp[act_idx], V_star).shape))
+                    print ("[DEBUG:VI] full term shape: {}".format((R_mdp[act_idx] + (self.discount * np.matmul(T_mdp[act_idx], V_star))).shape))
                 #for each action, compute the V and then select V_star based on max of element wise
-                V_act[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V_star))
+                V_act[act_idx] = R_mdp[act_idx] + (self.discount * np.matmul(T_mdp[act_idx], V_star))
             iterId += 1
             epsilon = LA.norm(np.subtract(V_star,np.amax(V_act, axis=0)), np.inf)
             if self.debug:
@@ -89,7 +93,7 @@ class MDP:
 
         return [V,iterId,epsilon]
 
-    def extractPolicy(self,V):
+    def extractPolicy(self,V,use_default=True,R_mdp=None,T_mdp=None):
         '''Procedure to extract a policy from a value function
         pi <-- argmax_a R^a + gamma T^a V
 
@@ -98,6 +102,10 @@ class MDP:
 
         Output:
         policy -- Policy: array of |S| entries'''
+
+        if use_default:
+            R_mdp = self.R
+            T_mdp = self.T
 
         assert V.ndim == 1, "Invalid V: it has dimensionality " + repr(V.ndim)
         assert V.shape[0] == self.nStates, "Invalid V: it has shape " + repr(V.shape)
@@ -108,10 +116,10 @@ class MDP:
         V_act = np.zeros([self.nActions, self.nStates])
         for act_idx in range(self.nActions):
             if self.debug:
-                print ("[DEBUG:ExP] right term shape: {}".format(np.matmul(self.T[act_idx], V).shape))
-                print ("[DEBUG:ExP] full term shape: {}".format((self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V))).shape))
+                print ("[DEBUG:ExP] right term shape: {}".format(np.matmul(T_mdp[act_idx], V).shape))
+                print ("[DEBUG:ExP] full term shape: {}".format((R_mdp[act_idx] + (self.discount * np.matmul(T_mdp[act_idx], V))).shape))
             #for each action, compute the V and then select V based on max of element wise
-            V_act[act_idx] = self.R[act_idx] + (self.discount * np.matmul(self.T[act_idx], V))
+            V_act[act_idx] = R_mdp[act_idx] + (self.discount * np.matmul(T_mdp[act_idx], V))
         if self.debug:
             print ("[DEBUG:ExP] V_act amax {}".format(np.amax(V_act, axis=0)))
             print ("[DEBUG:ExP] V_act argmax {}".format(np.argmax(V_act, axis=0)))
