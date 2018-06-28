@@ -1,0 +1,3 @@
+- no NaN in the reinforce algorithm
+- used epsilon=0.3 for reinforce algorithm
+- used value function (by averaging the Gn for state, action pair)

@@ -1,7 +1,7 @@
 import numpy as np
 import MDP
 import RL2
-from Utils import print_policy_word, check_stochastic_policy_terminate
+from Utils2 import print_policy_word, check_stochastic_policy_terminate, generate_data_for_plot, plot_avg_cumulative_reward
 
 
 ''' Construct a simple maze MDP
@@ -305,15 +305,19 @@ mdp = MDP.MDP(T,R,discount)
 rlProblem = RL2.RL2(mdp,np.random.normal)
 
 # Test REINFORCE
-# TODO uncomment following when finishd with model-based RL
-# Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100)
-# print ("\nREINFORCE results")
-# print (policy)
-# print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
-# argmax_policy = np.argmax(policy, axis=0)
-# print ("argmax policy: \n{}".format(argmax_policy))
-# print_policy_word(argmax_policy, rlProblem, s0=0, nSteps=100)
-# check_stochastic_policy_terminate(policy, rlProblem, s0=0, nSteps=100, nTrials=100)
+Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100)
+print ("\nREINFORCE results")
+print (policy)
+print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
+argmax_policy = np.argmax(policy, axis=0)
+print ("argmax policy: \n{}".format(argmax_policy))
+print_policy_word(argmax_policy, rlProblem, s0=0, nSteps=100)
+#Note the previous function call only checks if the argmax policy will terminate
+#Check over 100 trials if current stochastic policy will terminate
+check_stochastic_policy_terminate(policy, rlProblem, s0=0, nSteps=100, nTrials=100)
+print ("last 10 episode rewards: {}".format(rlProblem.get_reinforce_cumulative_reward()[-10:]))
+#mean episode reward doesn't mean much
+# print ("mean episode reward: {}".format(np.mean(rlProblem.get_reinforce_cumulative_reward())))
 
 # Test model-based RL
 [V,policy] = rlProblem.modelBasedRL(s0=0,defaultT=np.ones([mdp.nActions,mdp.nStates,mdp.nStates])/mdp.nStates,initialR=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=200,nSteps=100,epsilon=0.3)
@@ -324,7 +328,33 @@ print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
 print_policy_word(policy, rlProblem, s0=0, nSteps=100)
 
 # Test Q-learning
-#[Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=200,nSteps=100,epsilon=0.05)
-#print "\nQ-learning results"
-#print Q
-#print policy
+[Q,policy] = rlProblem.qLearning(s0=0,initialQ=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=200,nSteps=100,epsilon=0.05)
+print ("\nQ-learning results")
+print (Q)
+print (policy)
+print_policy_word(policy, rlProblem, s0=0, nSteps=100)
+
+
+############################################################
+#plot results for REINFORCE, ModelBasedRL and qLearning
+
+#generate data for 200 episodes over 100 trials
+rlProblem_results = generate_data_for_plot(rlProblem)
+plot_legend = rlProblem_results.pop(-1)
+plot_filename = "results/maze_avg_cumulative_reward_part1.png"
+plot_title = "Maze: Original Average Cumulative Reward"
+plot_avg_cumulative_reward(rlProblem_results, plot_legend, plot_title, plot_filename, use_ax_limit=False)
+
+#plot smoothed curves
+plot_filename = "results/maze_smooth_n5_avg_cumulative_reward_part1.png"
+plot_title = "Maze: Smooth(n=5) Average Cumulative Reward"
+plot_avg_cumulative_reward(rlProblem_results, plot_legend, plot_title, plot_filename, n=5, smooth=True, use_ax_limit=False)
+plot_filename = "results/maze_smooth_n10_avg_cumulative_reward_part1.png"
+plot_title = "Maze: Smooth(n=10) Average Cumulative Reward"
+plot_avg_cumulative_reward(rlProblem_results, plot_legend, plot_title, plot_filename, n=10, smooth=True, use_ax_limit=False)
+plot_filename = "results/maze_smooth_n20_avg_cumulative_reward_part1.png"
+plot_title = "Maze: Smooth(n=20) Average Cumulative Reward"
+plot_avg_cumulative_reward(rlProblem_results, plot_legend, plot_title, plot_filename, n=20, smooth=True, use_ax_limit=False)
+plot_filename = "results/maze_smooth_n50_avg_cumulative_reward_part1.png"
+plot_title = "Maze: Smooth(n=50) Average Cumulative Reward"
+plot_avg_cumulative_reward(rlProblem_results, plot_legend, plot_title, plot_filename, n=50, smooth=True, use_ax_limit=False)

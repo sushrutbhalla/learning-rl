@@ -1,0 +1,4 @@
+original results in REINFORCE:
+- using Gn only
+- not using epsilon-greedy
+- I wasn't aware but this run also has NaN values in the jacboian/policy so it not accurate.
