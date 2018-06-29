@@ -1,0 +1,13 @@
+trying different learning rate
+~                              |463                 if optionlr == 1:
+~                              |464                     if episode_idx < 25: lr=0.11
+~                              |465                     elif episode_idx < 100: lr=0.01
+~                              |466                     else: lr=0.001
+~                              |467                 elif optionlr == 2:
+~                              |468                     if episode_idx < 25: lr=0.11
+~                              |469                     elif episode_idx < 100: lr=0.02
+~                              |470                     else: lr=0.001
+~                              |471                 elif optionlr == 3:
+~                              |472                     if episode_idx < 25: lr=0.14
+~                              |473                     elif episode_idx < 100: lr=0.02
+~                              |474                     else: lr=0.005

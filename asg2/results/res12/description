@@ -1,0 +1,39 @@
+constant lr vs decaying lr
+constant lr with 0.01 does the best
+
+#generate data for reinforce    
+cumulative_reward = np.zeros([nTrials, nEpisodes])    
+for trial in range(nTrials):    
+    #run reinforce for 200 episodes and 100 steps    
+    [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, naive_decay_lr=False, lr_constant=0.01, upd_rule=1, constant_lr=0.0)    
+    cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()    
+reinforce_avg_cumulative_reward[:] = np.mean(cumulative_reward, axis=0)    
+plot_legend.append('REINFORCE (lr_cnt=0.01)')    
+print ("\n------------------------ Completed REINFORCE 1------------")    
+#generate data for reinforce
+cumulative_reward = np.zeros([nTrials, nEpisodes])
+for trial in range(nTrials):                          
+    #run reinforce for 200 episodes and 100 steps
+    [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.05, upd_rule=1)                                                                                                 
+    cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()
+reinforce_avg_cumulative_reward2[:] = np.mean(cumulative_reward, axis=0)        
+plot_legend.append('REINFORCE (lr=0.05)')                                   
+print ("------------------------ Completed REINFORCE 2------------")
+#generate data for reinforce                                            
+cumulative_reward = np.zeros([nTrials, nEpisodes])
+for trial in range(nTrials):                      
+    #run reinforce for 200 episodes and 100 steps     
+    [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.09, upd_rule=1)                                                                                                 
+    cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()                            
+reinforce_avg_cumulative_reward3[:] = np.mean(cumulative_reward, axis=0)    
+plot_legend.append('REINFORCE (lr=0.09)')                                       
+print ("------------------------ Completed REINFORCE 3------------")        
+#generate data for reinforce                                        
+cumulative_reward = np.zeros([nTrials, nEpisodes])                      
+for trial in range(nTrials):                      
+    #run reinforce for 200 episodes and 100 steps 
+    [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.01, upd_rule=1)                                                                                                 
+    cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()                            
+reinforce_avg_cumulative_reward4[:] = np.mean(cumulative_reward, axis=0)                                
+plot_legend.append('REINFORCE (lr=0.01)')                                   
+print ("------------------------ Completed REINFORCE 4------------") 
