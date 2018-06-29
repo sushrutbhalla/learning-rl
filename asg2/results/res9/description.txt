@@ -1,0 +1,2 @@
+built on top of res8
+but with 800 episodes and 25 steps
