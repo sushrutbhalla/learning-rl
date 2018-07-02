@@ -461,13 +461,21 @@ class RL2:
                     lr = constant_lr
                 #TODO hard-coded lr
                 if optionlr == 1:
-                    if episode_idx < 60: lr=0.005
-                    elif episode_idx < 100: lr=0.004
-                    else: lr=0.003
+                    if episode_idx < 20: lr=0.01
+                    elif episode_idx < 40: lr=0.009
+                    elif episode_idx < 60: lr=0.008
+                    elif episode_idx < 80: lr=0.007
+                    elif episode_idx < 100: lr=0.006
+                    elif episode_idx < 120: lr=0.005
+                    elif episode_idx < 140: lr=0.004
+                    elif episode_idx < 160: lr=0.003
+                    elif episode_idx < 180: lr=0.002
+                    else: lr=0.001
                 elif optionlr == 2:
                     if episode_idx < 60: lr=0.004
-                    elif episode_idx < 100: lr=0.003
-                    else: lr=0.002
+                    elif episode_idx < 120: lr=0.003
+                    elif episode_idx < 180: lr=0.002
+                    else: lr=0.001
                 elif optionlr == 3:
                     if episode_idx < 60: lr=0.003
                     elif episode_idx < 100: lr=0.002

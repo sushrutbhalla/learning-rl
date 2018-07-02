@@ -305,7 +305,7 @@ mdp = MDP.MDP(T,R,discount)
 rlProblem = RL2.RL2(mdp,np.random.normal)
 
 # Test REINFORCE
-Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100)
+Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100,optionlr=2)
 print ("\nREINFORCE results")
 print (policy)
 print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
@@ -319,31 +319,11 @@ print ("last 10 episode rewards: {}".format(rlProblem.get_reinforce_cumulative_r
 #mean episode reward doesn't mean much
 # print ("mean episode reward: {}".format(np.mean(rlProblem.get_reinforce_cumulative_reward())))
 
-# Test REINFORCE
-Q, policy = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=200,nSteps=100,with_baseline=True)
-print ("\nREINFORCE results")
-print (policy)
-print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
-argmax_policy = np.argmax(policy, axis=0)
-print ("argmax policy: \n{}".format(argmax_policy))
-print_policy_word(argmax_policy, rlProblem, s0=0, nSteps=100)
-#Note the previous function call only checks if the argmax policy will terminate
-#Check over 100 trials if current stochastic policy will terminate
-check_stochastic_policy_terminate(policy, rlProblem, s0=0, nSteps=100, nTrials=100)
-print ("last 10 episode rewards: {}".format(rlProblem.get_reinforce_cumulative_reward()[-10:]))
-#mean episode reward doesn't mean much
-# print ("mean episode reward: {}".format(np.mean(rlProblem.get_reinforce_cumulative_reward())))
-
-
-
-
-#---------------------------------------------------------------
 # Test model-based RL
 [V,policy] = rlProblem.modelBasedRL(s0=0,defaultT=np.ones([mdp.nActions,mdp.nStates,mdp.nStates])/mdp.nStates,initialR=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=200,nSteps=100,epsilon=0.3)
 print ("\nmodel-based RL results")
 print (V)
 print (policy)
-print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
 print_policy_word(policy, rlProblem, s0=0, nSteps=100)
 
 # Test Q-learning

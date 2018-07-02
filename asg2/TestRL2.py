@@ -49,21 +49,16 @@ rlProblem = RL2.RL2(mdp,np.random.normal)
 #I think advertise is 0 and save is 1
 
 # Test REINFORCE
-[Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=1000,nSteps=100)
+np.random.seed(10)
+[Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=1000,nSteps=100,optionlr=2)
 print ("\nREINFORCE results")
 print (Q)
 print (policy)
 print ("rounded policy: \n{}".format(np.round(policy, decimals=1)))
 print ("last 10 episode rewards: {}".format(rlProblem.get_reinforce_cumulative_reward()[-10:]))
-#mean episode reward doesn't mean much
-# print ("mean cumulative reward: {}".format(np.mean(rlProblem.get_reinforce_cumulative_reward())))
 
 # Test model-based RL
-[V,policy] = rlProblem.modelBasedRL(s0=0,defaultT=np.ones([mdp.nActions,mdp.nStates,mdp.nStates])/mdp.nStates,initialR=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=100,nSteps=100,epsilon=0.3)
+[V,policy] = rlProblem.modelBasedRL(s0=0,defaultT=np.ones([mdp.nActions,mdp.nStates,mdp.nStates])/mdp.nStates,initialR=np.zeros([mdp.nActions,mdp.nStates]),nEpisodes=100,nSteps=100,epsilon=0.05)
 print ("\nmodel-based RL results")
 print (V)
 print (policy)
-
-# for i in range(200):
-# 	[Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=1000,nSteps=100)
-# 	print ("mean cumulative reward: {}".format(np.mean(rlProblem.get_reinforce_cumulative_reward())))
