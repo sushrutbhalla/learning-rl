@@ -66,14 +66,9 @@ class RL2:
         shifted_policyParams = policyParams[:, state] - np.max(policyParams[:, state])
         pp_state = shifted_policyParams
         act_dist = np.exp(pp_state)/np.sum(np.exp(pp_state))
-        # print ("\npp_state-------------------------- {}".format(pp_state)) #TODO remove
-        # print ("act_dist-------------------------- {}".format(act_dist))
-        # print ("exp value:------------------------ {}".format(np.exp(pp_state)))
         assert np.count_nonzero(np.isnan(act_dist)) == 0, "NaN present in action probability for REINFORCE \naction_distribution: " +\
             repr(act_dist) + "\nPolicyParams: " + repr(pp_state) + "\nExp(PolicyParams): " + repr(np.exp(pp_state))
         assert len(act_dist) == self.mdp.nActions, "Length of stochastic actions for state don't match"
-        #keeping the assert sensitive to the way python handles decimal values
-        # assert np.sum(act_dist) >= 0.9999 and np.sum(act_dist) <= 1.0001, "Softmax sum doesn't equal 1: " + repr(np.sum(act_dist))
         action = np.random.choice(self.mdp.nActions, p=act_dist)
 
         return action
@@ -103,12 +98,9 @@ class RL2:
 
         #initialize variables for ModelBasedRL
         self.model_based_rl_cumulative_reward = []
-        model_T = defaultT  #TODO confirm shape: |A|x|S|x|S|
-        model_R = initialR  #TODO confirm shape: |A|x|S|
+        model_T = defaultT 
+        model_R = initialR 
         V = np.zeros([self.mdp.nStates])
-        #the counters should start at 1 because the transition model already has a default
-        #probability of 1/|S| TODO
-        #I don't think so. but what is the point of defaultT and defaultR?
         N_doubles = np.zeros([self.mdp.nActions, self.mdp.nStates])
         N_triples = np.zeros([self.mdp.nActions, self.mdp.nStates, self.mdp.nStates])
         policy = np.zeros([self.mdp.nStates], dtype=int)
@@ -124,7 +116,7 @@ class RL2:
                         print ("[exploration] action: {}".format(action))
                         print ("self.mdp.nActions: {}".format(self.mdp.nActions))
                 else:
-                    #generate policy using extractPolicy TODO check if this is OK
+                    #generate policy using extractPolicy
                     policy = self.mdp.extractPolicy(V,use_default=False,R_mdp=model_R,T_mdp=model_T)
                     action = policy[state]
                     if self.debug:
@@ -151,7 +143,7 @@ class RL2:
                 #update the state
                 state = state_p
 
-                #TODO add convergence step
+                #convergence step is not needed as Professor said because we have a number of episodes and steps pre-given
 
             #end of episode
             if self.debug and episode_idx % 100 == 0:
@@ -173,12 +165,13 @@ class RL2:
 
         return [V,policy]
 
-    def epsilonGreedyBandit(self,nIterations, decay_epsilon=False):
+    def epsilonGreedyBandit(self,nIterations, decay_epsilon=False, use_best_epsilon=False):
         '''Epsilon greedy algorithm for bandits (assume no discount factor)
 
         Inputs:
         nIterations -- # of arms that are pulled
         decay_epsilon -- use a decaying value of epsilon = 1/iterationID
+        use_best_epsilon -- use the best schedule for decay of epsilon
 
         Outputs:
         empiricalMeans -- empirical average of rewards for each arm (array of |A| entries)
@@ -201,7 +194,10 @@ class RL2:
         N = np.zeros([self.mdp.nActions])
         for iterationID in range(1, nIterations+1):
             if decay_epsilon:
-                epsilon = 1./iterationID
+                epsilon = 1.0/iterationID
+            elif use_best_epsilon:
+                epsilon = epsilon-0.0016
+                if epsilon < 0.0: epsilon=0.0
             if epsilon > 0. and random.random() <= epsilon:
                 action = random.randint(0, self.mdp.nActions-1)
                 if self.debug:
@@ -213,7 +209,7 @@ class RL2:
                     print ("[exploitation] action: {}".format(action))
                     print ("self.mdp.nActions: {}".format(self.mdp.nActions))
             #sample reward for this action
-            reward,_ = self.sampleRewardAndNextState(state, action) #TODO check is this correct?
+            reward,_ = self.sampleRewardAndNextState(state, action)
             V_total += reward
             self.epsilon_greedy_reward.append(reward)
             N[action] += 1
@@ -266,7 +262,7 @@ class RL2:
                 samples[action_idx, :] = np.random.beta(alpha[action_idx], beta[action_idx], k)
                 mean_reward[action_idx] = np.mean(samples[action_idx,:])
             action = np.argmax(mean_reward)
-            reward,_ = self.sampleRewardAndNextState(state, action) #TODO check is this correct?
+            reward,_ = self.sampleRewardAndNextState(state, action)
             if self.debug:
                 print ("action: {}, reward: {}".format(action, reward))
                 print ("hoeffding_term: {}".format(hoeffding_term))
@@ -306,28 +302,22 @@ class RL2:
         assert self.mdp.nStates == 1, "We can only have 1 state in bandits problem. Given: " + repr(self.mdp.nStates)
         #initialize variables
         state = 0    #state is fixed at 0
-        #TODO start the value of emperical means at a high value so that all actions get a chance to be selected
-        #keep it at one because the Na is also initialized to 1, this way we can say that the
-        #initial reward was 1 and not 0
-        #TODO or should we just change this and run all actions once and start off the initial estimate
-        V_total = np.ones([self.mdp.nStates])
-        empiricalMeans = np.ones([self.mdp.nStates])
+        V_total = np.zeros([self.mdp.nStates])
+        empiricalMeans = np.zeros([self.mdp.nStates])
         empiricalMeans_per_action = np.ones([self.mdp.nActions])
         hoeffding_term = np.ones([self.mdp.nActions])
-        #TODO starting the count at 1 will still give the same results as the argmax
-        #will choose the action based on which one is updated
         Na = np.ones([self.mdp.nActions])
         N = self.mdp.nActions
         for iteration in range(nIterations):
             for action_idx in range(self.mdp.nActions):
                 hoeffding_term[action_idx] = empiricalMeans_per_action[action_idx] + math.sqrt(2*math.log(N)/Na[action_idx])
             action = np.argmax(hoeffding_term)
-            reward,_ = self.sampleRewardAndNextState(state, action) #TODO check is this correct?
+            reward,_ = self.sampleRewardAndNextState(state, action)
             V_total += reward
             self.ucb_bandit_reward.append(reward)
-            # if self.debug:
-            #     print ("action: {}, reward: {}".format(action, reward))
-            #     print ("hoeffding_term: {}".format(hoeffding_term))
+            if self.debug:
+                print ("action: {}, reward: {}".format(action, reward))
+                print ("hoeffding_term: {}".format(hoeffding_term))
             Na[action] += 1
             N += 1
             empiricalMeans_per_action[action] = empiricalMeans_per_action[action] + (1./Na[action])*(reward - empiricalMeans_per_action[action])
@@ -340,7 +330,7 @@ class RL2:
 
         return empiricalMeans
 
-    def reinforce(self,s0,initialPolicyParams,nEpisodes,nSteps, naive_decay_lr=False, lr_constant=0.05, constant_lr=0.0, use_mc_est=False, epsilon=0.0, epsilon_decay=False, use_initial_pp=True, trip_assert=True, upd_rule=1, with_baseline=False, optionlr=0):
+    def reinforce(self,s0,initialPolicyParams,nEpisodes,nSteps, naive_decay_lr=False, lr_constant=0.05, constant_lr=0.0, use_mc_est=False, optionlr=0):
         '''reinforce algorithm.  Learn a stochastic policy of the form
         pi(a|s) = exp(policyParams(a,s))/[sum_a' exp(policyParams(a',s))]).
         This function should call the function sampleSoftmaxPolicy(policyParams,state) to select actions
@@ -350,20 +340,11 @@ class RL2:
         initialPolicyParams -- parameters of the initial policy (array of |A|x|S| entries)
         nEpisodes -- # of episodes (one episode consists of a trajectory of nSteps that starts in s0)
         nSteps -- # of steps per episode
-        naive_decay_lr -- decay lr using the formula 1/N[a,s] #TODO remove?  -- naive lr didn't help even with PP=[100]
+        naive_decay_lr -- decay lr using the formula 1/N[a,s]
         lr_constant -- multiply with this starting value of lr
-        constant_lr -- (float) use a constant value of learning rate (takes presedence over decaying lr) #TODO remove?
-        use_mc_est -- use Monte Carlo estimate instead of Gn #TODO remove?
-        epsilon -- (0.3) add epsilon-greedy to improve performance of reinforce algorithm #TODO remove?
-        epsilon_decay -- decay epsilon value linearly #TODO remove?
-        use_initial_pp -- use the initial policy parameters provided #TODO remove?
-        trip_assert -- #TODO remove?
-        upd_rule -- which rule to follow during update? #TODO remove
-                    1. update all actions for given state based on the Gn estimate
-                    2. update only visited action, state pair
-                    3. update all actions for given state using full jacobian and V_n(:, s_n)
-                        NOTE: this also sets use_mc_est=True
-        with_baseline -- use V as baseline
+        constant_lr -- (float) use a constant value of learning rate (takes presedence over decaying lr)
+        use_mc_est -- use Monte Carlo estimate instead of Gn
+        optionlr -- which option of learning rate decay to use: [1,2,3]
 
         Outputs:
         policyParams -- parameters of the final policy (array of |A|x|S| entries)
@@ -375,20 +356,12 @@ class RL2:
 
         #setup variables
         self.reinforce_cumulative_reward = []
-        if use_initial_pp:
-            #TODO multiplying and adding 100 to initial random policy doesn't help
-            policyParams = initialPolicyParams
-        else:
-            #TODO starting from constant policy definately helps
-            policyParams = 100.0 * np.ones((self.mdp.nActions,self.mdp.nStates)) #TODO remove and uncomment above
+        policyParams = initialPolicyParams
         lr = 1
         N = np.zeros([self.mdp.nActions, self.mdp.nStates])
         policy = np.zeros([self.mdp.nActions, self.mdp.nStates])
         V_est = np.zeros([self.mdp.nActions, self.mdp.nStates])
         N_V_est = np.zeros([self.mdp.nActions, self.mdp.nStates])
-        V_est2 = np.zeros([self.mdp.nActions, self.mdp.nStates])
-        N_V_est2 = np.zeros([self.mdp.nActions, self.mdp.nStates])
-        V_est_state = np.zeros([self.mdp.nStates])
         #execute all episodes
         for episode_idx in range(nEpisodes):
             #initialize start state
@@ -398,13 +371,7 @@ class RL2:
             #loop through the entire episode and generate trajectory
             cumulative_reward_episode = 0.
             for step_idx in range(nSteps):
-                #select an action based on epsilon (exploration vs exploitation)
-                if epsilon_decay:
-                    epsilon = (nEpisodes-episode_idx)/(4.*nEpisodes)
-                if epsilon > 0. and random.random() <= epsilon:
-                    action = random.randint(0, self.mdp.nActions-1)
-                else:
-                    action = self.sampleSoftmaxPolicy(policyParams, state)
+                action = self.sampleSoftmaxPolicy(policyParams, state)
                 reward, state_p = self.sampleRewardAndNextState(state, action)
                 episode_path[step_idx,:] = np.array([state,action,reward])
                 if self.debug:
@@ -413,36 +380,6 @@ class RL2:
                 cumulative_reward_episode += reward*(self.mdp.discount**step_idx)
                 state = state_p
             self.reinforce_cumulative_reward.append(cumulative_reward_episode)
-
-            # #TODO use mc estimate when using 3rd update rule
-            # if upd_rule == 3:
-            #     use_mc_est = True
-
-            if upd_rule == 3 or with_baseline:
-                #compute visited states
-                visited_states = np.unique(episode_path[:,0]).astype(int)
-                debug_total_updates = 0
-                for visit_state in visited_states:
-                    # state_idx = episode_path[:,0].tolist().index(visit_state)
-                    state_indicies = np.where(episode_path[:,0].astype(int) == visit_state)[0]
-                    for state_idx in state_indicies:
-                        visit_action = int(episode_path[state_idx, 1])
-                        Gn_scalar = 0.
-                        for idx in range(state_idx, nSteps):
-                            Gn_scalar += episode_path[idx, 2]*(self.mdp.discount**(idx-state_idx))
-                        assert Gn_scalar != 0., "Gn_scalar is 0. even after update"
-                        N_V_est[visit_action, visit_state] += 1
-                        #compute new average based on Monte Carlo estimate from lecture 3b slide 11
-                        V_est[visit_action, visit_state] = V_est[visit_action, visit_state] + \
-                            (1./N_V_est[visit_action, visit_state])*(Gn_scalar-V_est[visit_action, visit_state])
-                        assert V_est[visit_action, visit_state] != 0., "V_est can't be 0. after update " + repr(Gn_scalar)
-                        debug_total_updates += 1
-                assert debug_total_updates == nSteps, "total number of updates don't equal nSteps " + repr(debug_total_updates)
-            if with_baseline:
-                #compute baseline for each state value function
-                for idx_state in range(self.mdp.nStates):
-                    V_est_state[idx_state] = np.mean(V_est[:,idx_state])
-                #assert np.nonzero(V_est_state) == len(V_est_state), "V_est_state contains 0: " + repr(V_est_state)
 
             #loop through the entire episode and evaluate the policy and update policy parameters
             for step_idx in range(nSteps):
@@ -459,7 +396,7 @@ class RL2:
                     lr = lr_constant*int((nEpisodes-episode_idx)/(nEpisodes/10)+1)
                 if constant_lr > 0.0:
                     lr = constant_lr
-                #TODO hard-coded lr
+                #hard-coded lr options for evaluation purposes
                 if optionlr == 1:
                     if episode_idx < 20: lr=0.01
                     elif episode_idx < 40: lr=0.009
@@ -491,10 +428,10 @@ class RL2:
                         reward = episode_path[idx, 2]
                         Gn_scalar += reward*(self.mdp.discount**(idx-step_idx))
                     #compute new average based on Monte Carlo estimate from lecture 3b slide 11
-                    N_V_est2[action, state] += 1
-                    V_est2[action, state] = V_est2[action, state] + \
-                        (1./N_V_est2[action, state])*(Gn_scalar-V_est2[action, state])
-                    Gn_upd = V_est2[action, state]
+                    N_V_est[action, state] += 1
+                    V_est[action, state] = V_est[action, state] + \
+                        (1./N_V_est[action, state])*(Gn_scalar-V_est[action, state])
+                    Gn_upd = V_est[action, state]
                 else:
                     Gn_scalar = 0.
                     #compute Gn based on the cumulative reward till the end of episode starting from this state
@@ -502,89 +439,34 @@ class RL2:
                         reward = episode_path[idx, 2]
                         Gn_scalar += (self.mdp.discount**(idx-step_idx))*reward
                     Gn_upd = Gn_scalar
-                #TODO remove below code
-                # if with_baseline:
-                #     Gn_upd = Gn_upd - V_est_state[state]
 
-                if upd_rule == 1:
-                    #update the policy parameters using the update equation
-                    #\theta <- \theta + \alpha*\gamma^n*Gn*\nabla(log \pi_\theta (a_n|s_n) )
-                    #the derivative of log of softmax function is:
-                    #   1-softmax(i) when i=j (diagonal entries in jacobian)
-                    #   -softmax(j) when i!=j (all other entries in jacobian)
-                    #so we don't need to compute the log and derivative, we only need to compute the softmax for each index
-                    # get the policy parameters for this state as that is all that will get updated
-                    shifted_policyParams = policyParams[:, state] - np.max(policyParams[:, state])
-                    pp_state = shifted_policyParams
-                    #initialize jacobian to |A|
-                    jacobian = np.zeros([self.mdp.nActions])
-                    for idx in range(jacobian.shape[0]):
-                        if idx == action:
-                            #jacobian[idx] = 1 - np.exp(pp_state[idx])/np.sum(np.exp(pp_state)) #TODO changing the softmax used
-                            jacobian[idx] = 1 - np.exp(pp_state[action])/np.sum(np.exp(pp_state))
-                        else:
-                            #jacobian[idx] = 0 - np.exp(pp_state[idx])/np.sum(np.exp(pp_state)) #TODO changing the softmax used
-                            jacobian[idx] = 0 - np.exp(pp_state[action])/np.sum(np.exp(pp_state))
-                    # #TODO remove assert below as it trips a lot because for small number exponents its considered 0
-                    # if state != 9 and trip_assert:
-                    #     assert np.count_nonzero(jacobian) >= (len(jacobian)-1), "Zeros present in jacobian for REINFORCE (action, state): (" +\
-                    #         repr(action) + ", " + repr(state) + ")\njacobian: " +\
-                    #         repr(jacobian) + "\nPolicyParams: " + repr(pp_state) + "\nExp(PolicyParams): " + repr(np.exp(pp_state))
-                    assert np.count_nonzero(np.isnan(jacobian)) == 0, "NaN present in jacobian for REINFORCE (action, state): (" +\
-                        repr(action) + ", " + repr(state) + ")\njacobian: " +\
-                        repr(jacobian) + "\nPolicyParams: " + repr(pp_state) + "\nExp(PolicyParams): " + repr(np.exp(pp_state))
-                    #update the policy parameters
-                    update_term = np.multiply(jacobian, lr*(self.mdp.discount**step_idx)*Gn_upd)
-                    # print ("\nbefore:--------------------------\n{}".format(policyParams[:, state])) #TODO remove
-                    policyParams[:, state] = policyParams[:, state] + update_term
-                    #TODO try -update term
-                    # print ("after:--------------------------\n{}\n".format(policyParams[:, state])) #TODO remove
-                    #TODO remove following block
-                    # if (state==5 and action==1) or (state==8 and action==3) or (state==13 and action==0) or (state==10 and action==2):
-                    #     print ("\n------------ state: {} -- action: {} -- Gn: {} ---------------".format(state, action, Gn_upd))
-                    #     # np.set_printoptions(precision=2, suppress=True)
-                    #     # if Gn_upd >= 0.0:
-                    #     #     #sometimes this can be positive as the transition is probabilities and can transition to other state than 9
-                    #     #     #this can't happen when reward is -100 for pit
-                    #     #     print ("remaining trajectory (rounded rewards): \n{}".format(np.round_(episode_path[step_idx:,:],decimals=2)))
-                    #     #     for idx in range(step_idx, nSteps):
-                    #     #         reward = episode_path[idx, 2]
-                    #     #         print ("value at idx {}: {}".format(idx, (self.mdp.discount**(idx-step_idx))*reward))
-                    #     print ("pp_state: {}".format(pp_state))
-                    #     print ("jacobian: {}".format(jacobian))
-                    #     print ("update_term: {}".format(update_term))
-                    #     print ("updated pp_state: {}".format(policyParams[:, state]))
-                elif upd_rule == 2:
-                    #only update the visited action, state
-                    pp_state = policyParams[:, state] - np.max(policyParams[:, state])
-                    jacobian = 1.0 - (math.exp(pp_state[action])/(np.sum(np.exp(pp_state))))
-                    assert np.count_nonzero(np.isnan(jacobian)) == 0, "NaN present in jacobian for REINFORCE (action, state): (" +\
-                        repr(action) + ", " + repr(state) + ")\njacobian: " +\
-                        repr(jacobian) + "\nPolicyParams: " + repr(pp_state) + "\nExp(PolicyParams): " + repr(np.exp(pp_state))
-                    update_term = jacobian*lr*(self.mdp.discount**step_idx)*Gn_upd
-                    policyParams[action, state] += update_term
-                elif upd_rule == 3:
-                    pp_state = policyParams[:, state] - np.max(policyParams[:, state])
-                    #compute full jacobian
-                    jacobian = np.zeros([self.mdp.nActions, self.mdp.nActions])
-                    for col_idx in range(self.mdp.nActions):
-                        for row_idx in range(self.mdp.nActions):
-                            if col_idx == row_idx:
-                                value = 1.0 - (math.exp(pp_state[col_idx])/np.sum(np.exp(pp_state)))
-                            else:
-                                value = 0.0 - (math.exp(pp_state[col_idx])/np.sum(np.exp(pp_state)))
-                            jacobian[row_idx, col_idx] = value
-                    assert np.count_nonzero(np.isnan(jacobian)) == 0, "NaN present in jacobian for REINFORCE (action, state): (" +\
-                        repr(action) + ", " + repr(state) + ")\njacobian: " +\
-                        repr(jacobian) + "\nPolicyParams: " + repr(pp_state) + "\nExp(PolicyParams): " + repr(np.exp(pp_state))
-                    value_state = V_est[:, state]
-                    update_term = (self.mdp.discount**step_idx)*lr*np.matmul(jacobian, np.transpose(value_state))
-                    policyParams[:, state] += update_term
+                #update the policy parameters using the update equation
+                #\theta <- \theta + \alpha*\gamma^n*Gn*\nabla(log \pi_\theta (a_n|s_n) )
+                #the derivative of log of softmax function is:
+                #   1-softmax(i) when i=j (diagonal entries in jacobian)
+                #   -softmax(i) when i!=j (all other entries in jacobian)
+                #so we don't need to compute the log and derivative, we only need to compute the softmax for each index
+                # get the policy parameters for this state as that is all that will get updated
+                shifted_policyParams = policyParams[:, state] - np.max(policyParams[:, state])
+                pp_state = shifted_policyParams
+                #initialize jacobian to |A|
+                jacobian = np.zeros([self.mdp.nActions])
+                for idx in range(jacobian.shape[0]):
+                    if idx == action:
+                        jacobian[idx] = 1 - np.exp(pp_state[action])/np.sum(np.exp(pp_state))
+                    else:
+                        jacobian[idx] = 0 - np.exp(pp_state[action])/np.sum(np.exp(pp_state))
+                assert np.count_nonzero(np.isnan(jacobian)) == 0, "NaN present in jacobian for REINFORCE (action, state): (" +\
+                    repr(action) + ", " + repr(state) + ")\njacobian: " +\
+                    repr(jacobian) + "\nPolicyParams: " + repr(pp_state) + "\nExp(PolicyParams): " + repr(np.exp(pp_state))
+                #update the policy parameters
+                update_term = np.multiply(jacobian, lr*(self.mdp.discount**step_idx)*Gn_upd)
+                policyParams[:, state] = policyParams[:, state] + update_term
 
             # if episode_idx % 100 == 0:
             if self.debug and episode_idx % 100 == 0:
                 print ("episode_idx: {}".format(episode_idx))
-                # print ("episode_path: \n{}".format(episode_path))
+                print ("episode_path: \n{}".format(episode_path))
                 print ("policyParams[:,state]: \n{}".format(policyParams[:, state]))
                 print ("Gn_upd: \n{}".format(Gn_upd))
                 print ("jacobian {}".format(jacobian))
@@ -593,7 +475,6 @@ class RL2:
         assert len(self.reinforce_cumulative_reward) == nEpisodes, "Length of reward list != nEpisodes " + repr(len(self.reinforce_cumulative_reward)) + repr(nEpisodes)
         #compute the policy from the policy parameters
         for state in range(self.mdp.nStates):
-            # TODO check if it works first and then: shifted_policyParams = policyParams[:, state] - np.max(policyParams[:, state])
             shifted_policyParams = policyParams[:, state] - np.max(policyParams[:, state])
             pp_state = shifted_policyParams
             policy[:, state] = np.exp(pp_state)/np.sum(np.exp(pp_state))
@@ -759,20 +640,3 @@ class RL2:
         the latest run of thompsonSamplingBandit
         '''
         return np.array(self.thompson_sampling_reward)
-
-
-# # we are using Monte Carlo estimate instead of only using Gn computed in this step
-# if first_visit_mce:
-#     visited_states = np.unique(episode_path[:,0]).astype(int)
-#     for visit_state in visited_states:
-#         state_idx = episode_path[:,0].tolist().index(visit_state)
-#         visit_action = int(episode_path[state_idx, 1])
-#         Gn_scalar = 0.
-#         for idx in range(state_idx, nSteps):
-#             Gn_scalar += episode_path[idx, 2]*(self.mdp.discount**(idx-state_idx))
-#         assert Gn_scalar != 0., "Gn_scalar is 0. even after update"
-#         N_V_est[visit_action, visit_state] += 1
-#         #compute new average based on Monte Carlo estimate from lecture 3b slide 11
-#         V_est[visit_action, visit_state] = V_est[visit_action, visit_state] + \
-#             (1./N_V_est[visit_action, visit_state])*(Gn_scalar-V_est[visit_action, visit_state])
-#         assert V_est[visit_action, visit_state] != 0., "V_est can't be 0. after update " + repr(Gn_scalar)

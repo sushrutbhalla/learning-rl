@@ -27,7 +27,7 @@ mdp = MDP.MDP(T,R,discount)
 banditProblem = RL2.RL2(mdp,sampleBernoulli)
 
 # Test epsilon greedy strategy
-empiricalMeans = banditProblem.epsilonGreedyBandit(nIterations=200)
+empiricalMeans = banditProblem.epsilonGreedyBandit(nIterations=200, decay_epsilon=True)
 print ("\nepsilonGreedyBandit results")
 print (empiricalMeans)
 

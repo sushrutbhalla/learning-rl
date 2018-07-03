@@ -39,7 +39,6 @@ empiricalMeans = banditProblem.UCBbandit(nIterations=200)
 print ("\nUCBbandit results")
 print (empiricalMeans)
 
-#TODO before submission compare the files with the files on server to make sure that the function parameters are correct
 ''' Construct simple MDP as described in Lecture 2a Slides 13-14'''
 T = np.array([[[0.5,0.5,0,0],[0,1,0,0],[0.5,0.5,0,0],[0,1,0,0]],[[1,0,0,0],[0.5,0,0,0.5],[0.5,0,0.5,0],[0,0,0.5,0.5]]])
 R = np.array([[0,0,10,10],[0,0,10,10]])
@@ -49,8 +48,7 @@ rlProblem = RL2.RL2(mdp,np.random.normal)
 #I think advertise is 0 and save is 1
 
 # Test REINFORCE
-np.random.seed(10)
-[Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=1000,nSteps=100,optionlr=2)
+[Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(mdp.nActions,mdp.nStates),nEpisodes=1000,nSteps=100,constant_lr=0.002)
 print ("\nREINFORCE results")
 print (Q)
 print (policy)

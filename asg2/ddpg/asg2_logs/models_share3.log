@@ -1,0 +1,66 @@
+
+sharing layers actor
+
+sharing layers critic
+
+-------------------- [ACTOR]: 
+vars:
+[<tf.Variable 'shared_top_layer/dense/kernel:0' shape=(1, 64) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/dense/kernel:0' shape=(64, 64) dtype=float32_ref>,
+ <tf.Variable 'actor/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/dense_1/kernel:0' shape=(64, 1) dtype=float32_ref>,
+ <tf.Variable 'actor/dense_1/bias:0' shape=(1,) dtype=float32_ref>]
+trainable_vars:
+[<tf.Variable 'shared_top_layer/dense/kernel:0' shape=(1, 64) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/dense/kernel:0' shape=(64, 64) dtype=float32_ref>,
+ <tf.Variable 'actor/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/dense_1/kernel:0' shape=(64, 1) dtype=float32_ref>,
+ <tf.Variable 'actor/dense_1/bias:0' shape=(1,) dtype=float32_ref>]
+perturbable_vars:
+[<tf.Variable 'shared_top_layer/dense/kernel:0' shape=(1, 64) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/dense/kernel:0' shape=(64, 64) dtype=float32_ref>,
+ <tf.Variable 'actor/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'actor/dense_1/kernel:0' shape=(64, 1) dtype=float32_ref>,
+ <tf.Variable 'actor/dense_1/bias:0' shape=(1,) dtype=float32_ref>]
+
+-------------------- [CRITIC]: 
+vars:
+[<tf.Variable 'shared_top_layer/dense/kernel:0' shape=(1, 64) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/dense/kernel:0' shape=(65, 64) dtype=float32_ref>,
+ <tf.Variable 'critic/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/dense_1/kernel:0' shape=(64, 1) dtype=float32_ref>,
+ <tf.Variable 'critic/dense_1/bias:0' shape=(1,) dtype=float32_ref>]
+trainable_vars:
+[<tf.Variable 'shared_top_layer/dense/kernel:0' shape=(1, 64) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/dense/kernel:0' shape=(65, 64) dtype=float32_ref>,
+ <tf.Variable 'critic/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/LayerNorm/beta:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/LayerNorm/gamma:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/dense_1/kernel:0' shape=(64, 1) dtype=float32_ref>,
+ <tf.Variable 'critic/dense_1/bias:0' shape=(1,) dtype=float32_ref>]
+perturbable_vars:
+[<tf.Variable 'shared_top_layer/dense/kernel:0' shape=(1, 64) dtype=float32_ref>,
+ <tf.Variable 'shared_top_layer/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/dense/kernel:0' shape=(65, 64) dtype=float32_ref>,
+ <tf.Variable 'critic/dense/bias:0' shape=(64,) dtype=float32_ref>,
+ <tf.Variable 'critic/dense_1/kernel:0' shape=(64, 1) dtype=float32_ref>,
+ <tf.Variable 'critic/dense_1/bias:0' shape=(1,) dtype=float32_ref>]

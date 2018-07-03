@@ -3,9 +3,10 @@ import numpy as np
 from Utils2 import generate_bandit_data_for_plot, plot_avg_cumulative_reward
 
 #read result file
-dir_name = 'asg2_ddpg_logs_no_noise_in_if'
-episode_reward_normal_file = 'results/{}/no_sharing/history_episode_reward_normal.csv'.format('asg2_ddpg_logs')
-episode_reward_share_top_layer_file = 'results/{}/sharing/history_episode_reward_share_top_layer.csv'.format(dir_name)
+dir_name = 'asg2_ddpg_logs_all_share'
+# dir_name = 'asg2_ddpg_logs_add_shared_block'
+episode_reward_normal_file = 'results/{}/no_sharing/episode_reward_normal.csv'.format(dir_name)
+episode_reward_share_top_layer_file = 'results/{}/sharing/episode_reward_share_top_layer.csv'.format(dir_name)
 
 episode_reward_normal = np.genfromtxt(episode_reward_normal_file, delimiter=',')
 episode_reward_share_top_layer = np.genfromtxt(episode_reward_share_top_layer_file, delimiter=',')

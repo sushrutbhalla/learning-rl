@@ -196,7 +196,7 @@ def generate_data_for_plot(rlProblem, nEpisodes=200, nTrials=100, nSteps=100):
     # cumulative_reward = np.zeros([nTrials, nEpisodes])
     # for trial in range(nTrials):
     #     #run reinforce for 200 episodes and 100 steps
-    #     [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.003, upd_rule=1)
+    #     [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.003)
     #     cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()
     # reinforce_avg_cumulative_reward[:] = np.mean(cumulative_reward, axis=0)
     # plot_legend.append('REINFORCE (lr=0.003)')
@@ -206,7 +206,7 @@ def generate_data_for_plot(rlProblem, nEpisodes=200, nTrials=100, nSteps=100):
     # cumulative_reward = np.zeros([nTrials, nEpisodes])
     # for trial in range(nTrials):
     #     #run reinforce for 200 episodes and 100 steps
-    #     [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, optionlr=1, upd_rule=1)
+    #     [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, optionlr=1)
     #     cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()
     # reinforce_avg_cumulative_reward2[:] = np.mean(cumulative_reward, axis=0)
     # plot_legend.append('REINFORCE (opt=1)')
@@ -216,7 +216,7 @@ def generate_data_for_plot(rlProblem, nEpisodes=200, nTrials=100, nSteps=100):
     cumulative_reward = np.zeros([nTrials, nEpisodes])
     for trial in range(nTrials):
         #run reinforce for 200 episodes and 100 steps
-        [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, optionlr=2, upd_rule=1)
+        [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, optionlr=2)
         cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()
     reinforce_avg_cumulative_reward3[:] = np.mean(cumulative_reward, axis=0)
     plot_legend.append('REINFORCE (decaying lr)')
@@ -226,7 +226,7 @@ def generate_data_for_plot(rlProblem, nEpisodes=200, nTrials=100, nSteps=100):
     cumulative_reward = np.zeros([nTrials, nEpisodes])
     for trial in range(nTrials):
         #run reinforce for 200 episodes and 100 steps
-        [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.002, upd_rule=1)
+        [Q,policy] = rlProblem.reinforce(s0=0,initialPolicyParams=np.random.rand(rlProblem.mdp.nActions,rlProblem.mdp.nStates),nEpisodes=nEpisodes,nSteps=nSteps, constant_lr=0.002)
         cumulative_reward[trial,:] = rlProblem.get_reinforce_cumulative_reward()
     reinforce_avg_cumulative_reward4[:] = np.mean(cumulative_reward, axis=0)
     plot_legend.append('REINFORCE (const lr=0.002)')
@@ -293,6 +293,8 @@ def generate_bandit_data_for_plot(rlProblem, nIterations=200, nTrials=1000):
     '''
     #initialize variables
     epsilon_greedy_avg_reward = np.zeros([nIterations])
+    epsilon_greedy_avg_reward2 = np.zeros([nIterations])
+    epsilon_greedy_avg_reward3 = np.zeros([nIterations])
     ucb_bandit_avg_reward = np.zeros([nIterations])
     thompson_sampling_avg_reward = np.zeros([nIterations])
     plot_legend = []
@@ -301,10 +303,28 @@ def generate_bandit_data_for_plot(rlProblem, nIterations=200, nTrials=1000):
     cumulative_reward = np.zeros([nTrials, nIterations])
     for trial in range(nTrials):
         #run epsilon greedy for 200 iterations
-        empiricalMean = rlProblem.epsilonGreedyBandit(nIterations, decay_epsilon=True)
+        empiricalMean = rlProblem.epsilonGreedyBandit(nIterations, decay_epsilon=True, use_best_epsilon=False)
         cumulative_reward[trial,:] = rlProblem.get_epsilon_greedy_reward()
     epsilon_greedy_avg_reward[:] = np.mean(cumulative_reward, axis=0)
-    plot_legend.append('Epsilon Greedy')
+    plot_legend.append('Epsilon Greedy (e=1/nIter)')
+
+    #epsilon greedy (epsilon=best epsilon schedule)
+    cumulative_reward = np.zeros([nTrials, nIterations])
+    for trial in range(nTrials):
+        #run epsilon greedy for 200 iterations
+        empiricalMean = rlProblem.epsilonGreedyBandit(nIterations, decay_epsilon=False, use_best_epsilon=True)
+        cumulative_reward[trial,:] = rlProblem.get_epsilon_greedy_reward()
+    epsilon_greedy_avg_reward2[:] = np.mean(cumulative_reward, axis=0)
+    plot_legend.append('Epsilon Greedy (best-e-sch)')
+
+    #epsilon greedy (epsilon=0.3)
+    cumulative_reward = np.zeros([nTrials, nIterations])
+    for trial in range(nTrials):
+        #run epsilon greedy for 200 iterations
+        empiricalMean = rlProblem.epsilonGreedyBandit(nIterations, decay_epsilon=False, use_best_epsilon=False)
+        cumulative_reward[trial,:] = rlProblem.get_epsilon_greedy_reward()
+    epsilon_greedy_avg_reward3[:] = np.mean(cumulative_reward, axis=0)
+    plot_legend.append('Epsilon Greedy (e=0.3)')
 
     #UCB bandit
     cumulative_reward = np.zeros([nTrials, nIterations])
@@ -319,9 +339,9 @@ def generate_bandit_data_for_plot(rlProblem, nIterations=200, nTrials=1000):
     cumulative_reward = np.zeros([nTrials, nIterations])
     for trial in range(nTrials):
         #run thompson sampling for 200 iterations
-        empiricalMean = rlProblem.thompsonSamplingBandit(prior = np.ones([rlProblem.mdp.nActions, 2]), nIterations=nIterations)
+        empiricalMean = rlProblem.thompsonSamplingBandit(prior = np.ones([rlProblem.mdp.nActions, 2]), nIterations=nIterations, k=1)
         cumulative_reward[trial,:] = rlProblem.get_thompson_sampling_reward()
     thompson_sampling_avg_reward[:] = np.mean(cumulative_reward, axis=0)
     plot_legend.append('Thompson Sampling')
 
-    return [epsilon_greedy_avg_reward, ucb_bandit_avg_reward, thompson_sampling_avg_reward, plot_legend]
+    return [epsilon_greedy_avg_reward, epsilon_greedy_avg_reward2, epsilon_greedy_avg_reward3, ucb_bandit_avg_reward, thompson_sampling_avg_reward, plot_legend]
